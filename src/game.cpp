@@ -9,12 +9,48 @@
 #include <string>
 #include <vector>
 
+#include "animated_sprite.hpp"
 #include "core_types.hpp"
 #include "font.hpp"
 #include "render.hpp"
 #include "world.hpp"
 
 namespace war30k {
+
+namespace {
+
+int toDirectionIndex(Vec2 v, int fallback = 4) {
+  if (std::fabs(v.x) < 0.001f && std::fabs(v.y) < 0.001f) {
+    return fallback;
+  }
+
+  const float deg = std::atan2(v.y, v.x) * (180.0f / 3.14159265f);
+
+  if (deg >= -112.5f && deg < -67.5f) {
+    return 0;
+  }
+  if (deg >= -67.5f && deg < -22.5f) {
+    return 1;
+  }
+  if (deg >= -22.5f && deg < 22.5f) {
+    return 2;
+  }
+  if (deg >= 22.5f && deg < 67.5f) {
+    return 3;
+  }
+  if (deg >= 67.5f && deg < 112.5f) {
+    return 4;
+  }
+  if (deg >= 112.5f && deg < 157.5f) {
+    return 5;
+  }
+  if (deg >= 157.5f || deg < -157.5f) {
+    return 6;
+  }
+  return 7;
+}
+
+}  // namespace
 
 int Game::run() {
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) != 0) {
@@ -59,6 +95,9 @@ int Game::run() {
   const std::vector<Stage> stages = buildStages();
   std::mt19937 rng(std::random_device{}());
 
+  AnimatedSprite garroSprite(renderer, "assets/garro_sheet.bmp", "assets/garro_frames.json");
+  const bool garroSpriteReady = garroSprite.isValid();
+
   Vec2 player{120.0f, WINDOW_HEIGHT * 0.5f};
   Vec2 facingVec{1.0f, 0.0f};
   Facing facingDir = Facing::Right;
@@ -80,9 +119,11 @@ int Game::run() {
 
   SDL_Rect targetZone{WINDOW_WIDTH - 140, WINDOW_HEIGHT / 2 - 70, 96, 128};
   std::vector<Enemy> enemies;
+  std::vector<AnimatedSprite> enemySprites;
   std::vector<Beacon> beacons;
   std::vector<Projectile> enemyShots;
   std::vector<std::string> stageMap;
+  bool enemySpritesReady = true;
 
   auto resetRun = [&]() {
     stageIndex = 0;
@@ -105,11 +146,14 @@ int Game::run() {
     targetZone = {WINDOW_WIDTH - 136, WINDOW_HEIGHT / 2 - 64, 96, 128};
 
     enemies.clear();
+    enemySprites.clear();
     beacons.clear();
     enemyShots.clear();
 
     enemies.reserve(stage.enemyCount);
+    enemySprites.reserve(stage.enemyCount);
     enemyShots.reserve(stage.enemyCount * 2);
+    enemySpritesReady = true;
 
     for (int i = 0; i < stage.enemyCount; ++i) {
       Vec2 spawn = randomFreePosition(rng, stageMap, player, 180.0f);
@@ -119,6 +163,11 @@ int Game::run() {
       enemy.shootTimer = (static_cast<float>(i % 7) / 7.0f) * PROJECTILE_COOLDOWN;
       enemy.alive = true;
       enemies.push_back(enemy);
+
+      enemySprites.emplace_back(renderer, "assets/traitor_sheet.bmp", "assets/traitor_frames.json");
+      if (!enemySprites.back().isValid()) {
+        enemySpritesReady = false;
+      }
     }
 
     if (stage.objectiveType == ObjectiveType::ActivateBeacons) {
@@ -213,6 +262,7 @@ int Game::run() {
       } else {
         const uint8_t* keyboard = SDL_GetKeyboardState(nullptr);
         Vec2 input;
+        bool playerMoving = false;
 
         if (keyboard[SDL_SCANCODE_W] || keyboard[SDL_SCANCODE_UP]) {
           input.y -= 1.0f;
@@ -242,9 +292,16 @@ int Game::run() {
         }
 
         input = normalize(input);
+        playerMoving = length(input) > 0.01f;
         if (length(input) > 0.0f) {
           facingVec = input;
           facingDir = facingFromVector(input, facingDir);
+        }
+
+        const int playerDirIndex = toDirectionIndex(facingVec, 2);
+        if (garroSpriteReady) {
+          garroSprite.setAnimation(playerMoving ? "Walk" : "Idle", playerDirIndex);
+          garroSprite.update(dt);
         }
 
         moveWithCollision(stageMap,
@@ -273,16 +330,26 @@ int Game::run() {
           }
         }
 
-        for (auto& enemy : enemies) {
+        for (std::size_t i = 0; i < enemies.size(); ++i) {
+          auto& enemy = enemies[i];
           if (!enemy.alive) {
             continue;
           }
+
+          const Vec2 beforeMove = enemy.pos;
           Vec2 chase{player.x - enemy.pos.x, player.y - enemy.pos.y};
           chase = normalize(chase);
           moveWithCollision(stageMap,
                             enemy.pos,
                             {chase.x * enemy.speed * dt, chase.y * enemy.speed * dt},
                             ENTITY_RADIUS);
+
+          if (enemySpritesReady && i < enemySprites.size()) {
+            const bool enemyMoving = distanceSquared(beforeMove, enemy.pos) > 0.2f;
+            const int enemyDirIndex = toDirectionIndex(chase, 4);
+            enemySprites[i].setAnimation(enemyMoving ? "Walk" : "Idle", enemyDirIndex);
+            enemySprites[i].update(dt);
+          }
 
           enemy.shootTimer -= dt;
           if (enemy.shootTimer <= 0.0f && distanceSquared(enemy.pos, player) < 320.0f * 320.0f) {
@@ -357,6 +424,9 @@ int Game::run() {
           enemyShots.clear();
         }
       }
+    } else if (garroSpriteReady) {
+      garroSprite.setAnimation("Idle", toDirectionIndex(facingVec, 2));
+      garroSprite.update(dt);
     }
 
     const Stage& currentStage = stages[stageIndex < static_cast<int>(stages.size()) ? stageIndex : stages.size() - 1];
@@ -381,11 +451,20 @@ int Game::run() {
         drawBeacon(renderer, beacon.pos, beacon.used, pulse);
       }
 
-      for (const auto& enemy : enemies) {
+      for (std::size_t i = 0; i < enemies.size(); ++i) {
+        const auto& enemy = enemies[i];
         if (!enemy.alive) {
           continue;
         }
-        drawTraitor(renderer, enemy.pos, walkFrame);
+
+        if (enemySpritesReady && i < enemySprites.size() && enemySprites[i].isValid()) {
+          enemySprites[i].draw(renderer,
+                               static_cast<int>(enemy.pos.x) - 24,
+                               static_cast<int>(enemy.pos.y) - 24,
+                               1.5f);
+        } else {
+          drawTraitor(renderer, enemy.pos, walkFrame);
+        }
       }
 
       SDL_SetRenderDrawColor(renderer, 230, 90, 90, 255);
@@ -394,7 +473,14 @@ int Game::run() {
         SDL_RenderFillRect(renderer, &r);
       }
 
-      drawGarro(renderer, player, facingDir, walkFrame);
+      if (garroSpriteReady) {
+        garroSprite.draw(renderer,
+                         static_cast<int>(player.x) - 24,
+                         static_cast<int>(player.y) - 24,
+                         1.5f);
+      } else {
+        drawGarro(renderer, player, facingDir, walkFrame);
+      }
 
       if (swingTimer > 0.0f) {
         SDL_SetRenderDrawColor(renderer, 255, 235, 120, 210);

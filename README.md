@@ -16,6 +16,8 @@ You play as Nathaniel Garro during the Horus Heresy, surviving Isstvan V, crossi
 - Campaign: 4 connected story stages with objectives and narrative panels
 - Combat: melee attack arc + enemy ranged projectiles
 - Tactical UI: objective tracking, HP HUD, and minimap
+- Animation: JSON-driven spritesheets with 8-direction state switching (`Idle` / `Walk`)
+- Visual style: procedural edge-highlighting pass for top armor edges (30K 'Eavy Metal-inspired)
 
 ## Story Campaign
 
@@ -60,6 +62,7 @@ You play as Nathaniel Garro during the Horus Heresy, surviving Isstvan V, crossi
 
 ```text
 include/
+  animated_sprite.hpp    # JSON spritesheet animator with setAnimation(state, direction)
   core_types.hpp        # Shared constants, data structs, enums, math signatures
   font.hpp              # Bitmap font interface
   world.hpp             # Stages, map generation, collision
@@ -70,9 +73,19 @@ src/
   main.cpp              # Thin launcher
   game.cpp              # Core loop, state machine, gameplay systems
   core/
-	 common.cpp          # Math + bitmap font implementation
-	 world.cpp           # Stage data + map/collision implementation
-	 render.cpp          # Tile/sprite/minimap drawing implementation
+    animated_sprite.cpp # AnimatedSprite implementation (JSON + frame timing + motion overlays)
+    common.cpp          # Math + bitmap font implementation
+    world.cpp           # Stage data + map/collision implementation
+    render.cpp          # Tile/sprite/minimap drawing implementation
+
+assets/
+  garro_sheet.bmp       # Procedural Garro spritesheet
+  garro_frames.json     # Garro frame definitions
+  traitor_sheet.bmp     # Procedural traitor spritesheet
+  traitor_frames.json   # Traitor frame definitions
+
+scripts/
+  generate_sheets.py    # Procedural spritesheet generator with edge highlights
 ```
 
 ## Performance Notes (Modular + Fast)
@@ -82,7 +95,8 @@ src/
 - `reserve()` used for hot-path entity vectors to reduce runtime reallocations.
 - Fixed-size tile grid with lightweight collision checks.
 - Frame delta clamping to avoid simulation spikes.
-- Rendering built on simple primitives and low-overhead pixel sprites.
+- Animation work moved into dedicated module to reduce game-loop complexity.
+- Rendering combines tile primitives with sprite-sheet blits for low overhead.
 
 ## Linux Setup
 
@@ -105,6 +119,41 @@ sudo apt-get install -y build-essential cmake libsdl2-dev
 cmake -S . -B build
 cmake --build build -j
 ```
+
+## Regenerate Spritesheets (Optional)
+
+The project includes procedural spritesheet generation with top-edge armor highlights (30K style edge-lighting pass):
+
+```bash
+python3 scripts/generate_sheets.py
+```
+
+This regenerates:
+
+- `assets/garro_sheet.bmp`
+- `assets/traitor_sheet.bmp`
+
+## AnimatedSprite JSON Format
+
+`AnimatedSprite` expects keys in this pattern:
+
+- `Idle_0` ... `Idle_7`
+- `Walk_0` ... `Walk_7`
+
+Direction indices:
+
+- `0=N`, `1=NE`, `2=E`, `3=SE`, `4=S`, `5=SW`, `6=W`, `7=NW`
+
+Frame objects use:
+
+```json
+{ "x": 64, "y": 96, "w": 32, "h": 32, "duration": 95 }
+```
+
+Animation behavior:
+
+- `Idle`: subtle breathing shoulder-pad drift.
+- `Walk`: heavy 4-frame stomp cadence.
 
 ## Run
 

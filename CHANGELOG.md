@@ -2,6 +2,23 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.4.0] - 2026-03-22
+
+### Added
+- `AnimatedSprite` module with JSON frame definitions and spritesheet loading.
+- 8-direction animation switching via `setAnimation(state, direction)` where directions map to `N, NE, E, SE, S, SW, W, NW`.
+- Idle breathing shoulder-pad motion and heavy 4-frame walk stomp behavior.
+- Generated sprite assets and directional frame JSON files:
+  - `assets/garro_sheet.bmp`
+  - `assets/traitor_sheet.bmp`
+  - `assets/garro_frames.json`
+  - `assets/traitor_frames.json`
+
+### Changed
+- Integrated animated sprites into runtime gameplay rendering for player and enemies.
+- Added procedural edge-highlighting pass for power-armor top edges in sprite generation (`scripts/generate_sheets.py`).
+- Updated README with animation format details and refreshed gameplay images.
+
 ## [0.3.0] - 2026-03-21
 
 ### Added
