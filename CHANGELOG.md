@@ -2,6 +2,28 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.6.0] - 2026-03-22
+
+### Added
+- Retro sprite-system module:
+  - `include/sprite_system.hpp`
+  - `src/core/sprite_system.cpp`
+- New sprite entities for the active gameplay loop:
+  - `retro::SpaceMarine` (2-frame walk cadence + torso bob)
+  - `retro::WarpDaemon` (sine-wave hover/floating)
+- Y-sort utility for stable top-down render depth ordering (`sortEntitiesByY`).
+
+### Changed
+- Integrated retro sprite entities into `game.cpp` runtime update/render paths.
+- Replaced primary character render pass with Y-sorted entity rendering (Garro + enemies).
+- Kept fallback rendering for missing textures to preserve playability.
+- Updated docs and gameplay image callouts for retro visuals and depth sorting.
+
+### Fixed
+- Briefing lock-in: movement input now exits briefing and starts gameplay immediately.
+- Eisenstein mission start collision: stage spawn positions moved to guaranteed walkable tiles.
+- Added spawn safety fallback to random free tile when a configured spawn collides.
+
 ## [0.5.0] - 2026-03-22
 
 ### Added

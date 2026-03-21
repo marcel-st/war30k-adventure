@@ -17,11 +17,12 @@ You play as Nathaniel Garro during the Horus Heresy, surviving Isstvan V, crossi
 - Combat: melee attack arc + enemy ranged projectiles
 - Combat: Player sword swing arc with knockback-driven hit response
 - Tactical UI: objective tracking, HP HUD, and minimap
-- Animation: JSON-driven spritesheets with 8-direction state switching (`Idle` / `Walk`)
+- Animation: retro sprite-entity pipeline with ALttP-style 2-frame movement cadence
 - Player system: ALttP-style 4-direction sprite state (`Up/Down/Left/Right`) and sword state
 - Enemy AI: Zelda-style wander + aggro behavior with distance-triggered pursuit
-- Legion palette swaps: dynamic texture tinting (e.g., Emperor's Children, World Eaters)
-- Visual style: procedural edge-highlighting pass for top armor edges (30K 'Eavy Metal-inspired)
+- Rendering depth: Y-sorted character draw order for top-down overlap correctness
+- Visual FX: daemon sine-wave hover/floating and marine torso bob while walking
+- Mission flow: briefing auto-starts gameplay on movement input + safe mission spawn fallback
 
 ## Story Campaign
 
@@ -42,7 +43,7 @@ _Current build: Garro sword arc strike with knockback response, projectile press
 
 ![Gameplay - Terra](docs/images/gameplay-terra.svg)
 
-_Current build: mixed legion palette variants, aggro pursuit states, and objective relay approach under fire._
+_Current build: Y-sorted retro sprites, daemon float shimmer, and objective relay approach under fire._
 
 ## Controls
 
@@ -75,6 +76,7 @@ include/
   enemy.hpp             # Enemy base class, Zelda-style AI, palette swaps, knockback
   font.hpp              # Bitmap font interface
   player.hpp            # Garro player class with SpriteState and sword arc collision
+  sprite_system.hpp     # Retro sprite entities (SpaceMarine/WarpDaemon) + Y-sort
   world.hpp             # Stages, map generation, collision
   render.hpp            # Sprite/tile/minimap rendering
   game.hpp              # Game class interface
@@ -87,6 +89,7 @@ src/
     common.cpp          # Math + bitmap font implementation
     enemy.cpp           # Enemy AI implementation (wander/aggro + knockback + palette)
     player.cpp          # Player implementation (4-dir render + sword swing arc)
+    sprite_system.cpp   # Retro sprite entities, walking bob, daemon float, Y-sort utility
     world.cpp           # Stage data + map/collision implementation
     render.cpp          # Tile/sprite/minimap drawing implementation
 
@@ -110,6 +113,7 @@ scripts/
 - Frame delta clamping to avoid simulation spikes.
 - Animation work moved into dedicated module to reduce game-loop complexity.
 - Runtime enemy behavior moved to reusable Enemy base classes.
+- Y-sorted sprite entity rendering improves overlap correctness without heavy scene graph cost.
 - Knockback overlap resolution prevents enemy/player collision stacking.
 - Rendering combines tile primitives with sprite-sheet blits for low overhead.
 

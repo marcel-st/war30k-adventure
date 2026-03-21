@@ -15,6 +15,7 @@
 #include "font.hpp"
 #include "player.hpp"
 #include "render.hpp"
+#include "sprite_system.hpp"
 #include "world.hpp"
 
 namespace war30k {
@@ -23,11 +24,23 @@ namespace {
 
 struct RuntimeEnemy {
   std::unique_ptr<war30k::ai::Enemy> aiEntity;
+  std::unique_ptr<war30k::retro::SpriteEntity> visual;
   bool alive = true;
   float shootTimer = 0.0f;
   int hitPoints = 2;
   std::string legion;
+  bool isDaemon = false;
 };
+
+retro::Direction to4Dir(Vec2 v, retro::Direction fallback = retro::Direction::SOUTH) {
+  if (std::fabs(v.x) < 0.001f && std::fabs(v.y) < 0.001f) {
+    return fallback;
+  }
+  if (std::fabs(v.x) > std::fabs(v.y)) {
+    return v.x >= 0.0f ? retro::Direction::EAST : retro::Direction::WEST;
+  }
+  return v.y >= 0.0f ? retro::Direction::SOUTH : retro::Direction::NORTH;
+}
 
 }  // namespace
 
@@ -77,6 +90,15 @@ int Game::run() {
   Player garroPlayer(renderer, "assets/garro_sheet.bmp", 32, 32, 1.5f);
   const bool garroPlayerReady = garroPlayer.isValid();
 
+  SDL_Texture* garroSpriteTexture = nullptr;
+  {
+    SDL_Surface* garroSurface = SDL_LoadBMP("assets/garro_sheet.bmp");
+    if (garroSurface != nullptr) {
+      garroSpriteTexture = SDL_CreateTextureFromSurface(renderer, garroSurface);
+      SDL_FreeSurface(garroSurface);
+    }
+  }
+
   SDL_Texture* enemyMarineTexture = nullptr;
   {
     SDL_Surface* marineSurface = SDL_LoadBMP("assets/traitor_sheet.bmp");
@@ -104,6 +126,9 @@ int Game::run() {
 
   PlayPhase phase = PlayPhase::Briefing;
 
+  retro::SpaceMarine garroVisual(garroSpriteTexture);
+  garroVisual.setPosition(static_cast<int>(player.x), static_cast<int>(player.y));
+
   SDL_Rect targetZone{WINDOW_WIDTH - 140, WINDOW_HEIGHT / 2 - 70, 96, 128};
   std::vector<RuntimeEnemy> enemies;
   std::vector<Beacon> beacons;
@@ -125,8 +150,29 @@ int Game::run() {
 
     stageMap = buildStageMap(idx);
 
-    player = {96.0f, (MAP_HEIGHT / 2.0f) * TILE_SIZE};
+    auto stageSpawn = [&](int stageIdx) -> Vec2 {
+      switch (stageIdx) {
+        case 0:
+          return {3.5f * TILE_SIZE, 11.5f * TILE_SIZE};
+        case 1:
+          return {3.5f * TILE_SIZE, 8.5f * TILE_SIZE};
+        case 2:
+          return {3.5f * TILE_SIZE, 11.5f * TILE_SIZE};
+        case 3:
+          return {3.5f * TILE_SIZE, 11.5f * TILE_SIZE};
+        default:
+          return {3.5f * TILE_SIZE, 11.5f * TILE_SIZE};
+      }
+    };
+
+    player = stageSpawn(idx);
+    if (collidesMap(stageMap, player, ENTITY_RADIUS)) {
+      player = randomFreePosition(rng, stageMap, {0.0f, 0.0f}, 0.0f);
+    }
     garroPlayer.setPosition(player);
+    garroVisual.setPosition(static_cast<int>(player.x), static_cast<int>(player.y));
+    garroVisual.setDirection(retro::Direction::SOUTH);
+    garroVisual.setMoving(false);
     facingVec = {1.0f, 0.0f};
     facingDir = Facing::Right;
     targetZone = {WINDOW_WIDTH - 136, WINDOW_HEIGHT / 2 - 64, 96, 128};
@@ -143,16 +189,37 @@ int Game::run() {
       RuntimeEnemy runtimeEnemy;
       if (i % 5 == 0) {
         runtimeEnemy.aiEntity = std::make_unique<ai::NurgleDaemonEnemy>(spawn);
+        runtimeEnemy.visual = std::make_unique<retro::WarpDaemon>(enemyMarineTexture);
         runtimeEnemy.hitPoints = 3;
         runtimeEnemy.legion = "World Eaters";
+        runtimeEnemy.isDaemon = true;
       } else {
         runtimeEnemy.aiEntity = std::make_unique<ai::DeathGuardTraitorEnemy>(spawn);
+        runtimeEnemy.visual = std::make_unique<retro::SpaceMarine>(enemyMarineTexture);
         runtimeEnemy.hitPoints = 2;
         runtimeEnemy.legion = "Emperor's Children";
+        runtimeEnemy.isDaemon = false;
       }
 
       runtimeEnemy.aiEntity->setMovementSpeeds(stage.enemySpeed * 0.6f, stage.enemySpeed);
       runtimeEnemy.aiEntity->setSpriteSourceRect({0, 0, 32, 32});
+      if (runtimeEnemy.visual) {
+        if (runtimeEnemy.isDaemon) {
+          auto* daemon = dynamic_cast<retro::WarpDaemon*>(runtimeEnemy.visual.get());
+          if (daemon) {
+            daemon->setPosition(static_cast<int>(spawn.x), static_cast<int>(spawn.y));
+            daemon->setFloatParameters(2.5f, 5.7f);
+            daemon->setDirection(retro::Direction::SOUTH);
+          }
+        } else {
+          auto* marine = dynamic_cast<retro::SpaceMarine*>(runtimeEnemy.visual.get());
+          if (marine) {
+            marine->setPosition(static_cast<int>(spawn.x), static_cast<int>(spawn.y));
+            marine->setDirection(retro::Direction::SOUTH);
+            marine->setMoving(false);
+          }
+        }
+      }
       runtimeEnemy.shootTimer = (static_cast<float>(i % 7) / 7.0f) * PROJECTILE_COOLDOWN;
       runtimeEnemy.alive = true;
       enemies.push_back(std::move(runtimeEnemy));
@@ -225,7 +292,22 @@ int Game::run() {
       const Stage& stage = stages[stageIndex];
 
       if (phase == PlayPhase::Briefing) {
-        if (interactPressed) {
+        const uint8_t* keyboard = SDL_GetKeyboardState(nullptr);
+        bool wantsToMove = keyboard[SDL_SCANCODE_W] || keyboard[SDL_SCANCODE_A] ||
+                           keyboard[SDL_SCANCODE_S] || keyboard[SDL_SCANCODE_D] ||
+                           keyboard[SDL_SCANCODE_UP] || keyboard[SDL_SCANCODE_LEFT] ||
+                           keyboard[SDL_SCANCODE_DOWN] || keyboard[SDL_SCANCODE_RIGHT];
+
+        if (!wantsToMove && controller) {
+          const float axisX = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX) / 32767.0f;
+          const float axisY = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTY) / 32767.0f;
+          wantsToMove = std::fabs(axisX) > 0.18f || std::fabs(axisY) > 0.18f;
+        }
+
+        if (wantsToMove) {
+          phase = PlayPhase::Gameplay;
+          messageLine = 0;
+        } else if (interactPressed) {
           messageLine++;
           if (messageLine >= static_cast<int>(stage.briefing.size())) {
             phase = PlayPhase::Gameplay;
@@ -286,6 +368,9 @@ int Game::run() {
         if (garroPlayerReady) {
           garroPlayer.setMoveIntent(input.x, input.y);
         }
+        garroVisual.setDirection(to4Dir(playerMoving ? input : facingVec, retro::Direction::SOUTH));
+        garroVisual.setMoving(playerMoving);
+        garroVisual.updateWalkingAnimation(dt);
 
         moveWithCollision(stageMap,
                           player,
@@ -294,6 +379,7 @@ int Game::run() {
         if (garroPlayerReady) {
           garroPlayer.setPosition(player);
         }
+        garroVisual.setPosition(static_cast<int>(player.x), static_cast<int>(player.y));
 
         if (attackPressed && attackTimer <= 0.0f) {
           attackTimer = ATTACK_COOLDOWN;
@@ -344,10 +430,33 @@ int Game::run() {
             continue;
           }
 
+          Vec2 beforePos = enemy.aiEntity->position();
           SDL_Point playerPoint{static_cast<int>(player.x), static_cast<int>(player.y)};
           enemy.aiEntity->updateAI(dt, playerPoint, rng);
 
           Vec2 enemyPos = enemy.aiEntity->position();
+          Vec2 enemyDelta{enemyPos.x - beforePos.x, enemyPos.y - beforePos.y};
+          const bool enemyMoving = std::fabs(enemyDelta.x) > 0.05f || std::fabs(enemyDelta.y) > 0.05f;
+
+          if (enemy.visual) {
+            if (enemy.isDaemon) {
+              auto* daemon = dynamic_cast<retro::WarpDaemon*>(enemy.visual.get());
+              if (daemon) {
+                daemon->setPosition(static_cast<int>(enemyPos.x), static_cast<int>(enemyPos.y));
+                daemon->setDirection(to4Dir(enemyMoving ? enemyDelta : Vec2{player.x - enemyPos.x, player.y - enemyPos.y},
+                                            retro::Direction::SOUTH));
+              }
+            } else {
+              auto* marine = dynamic_cast<retro::SpaceMarine*>(enemy.visual.get());
+              if (marine) {
+                marine->setPosition(static_cast<int>(enemyPos.x), static_cast<int>(enemyPos.y));
+                marine->setDirection(to4Dir(enemyMoving ? enemyDelta : Vec2{player.x - enemyPos.x, player.y - enemyPos.y},
+                                            retro::Direction::SOUTH));
+                marine->setMoving(enemyMoving);
+                marine->updateWalkingAnimation(dt);
+              }
+            }
+          }
 
           enemy.shootTimer -= dt;
           if (enemy.shootTimer <= 0.0f && distanceSquared(enemyPos, player) < 320.0f * 320.0f) {
@@ -426,6 +535,9 @@ int Game::run() {
       garroPlayer.setMoveIntent(0.0f, 0.0f);
       garroPlayer.setPosition(player);
       garroPlayer.update(dt);
+      garroVisual.setMoving(false);
+      garroVisual.updateWalkingAnimation(dt);
+      garroVisual.setPosition(static_cast<int>(player.x), static_cast<int>(player.y));
     }
 
     const Stage& currentStage = stages[stageIndex < static_cast<int>(stages.size()) ? stageIndex : stages.size() - 1];
@@ -450,34 +562,48 @@ int Game::run() {
         drawBeacon(renderer, beacon.pos, beacon.used, pulse);
       }
 
-      for (std::size_t i = 0; i < enemies.size(); ++i) {
-        const auto& enemy = enemies[i];
-        if (!enemy.alive) {
+      std::vector<retro::SpriteEntity*> ySortedEntities;
+      ySortedEntities.reserve(enemies.size() + 1);
+      for (auto& enemy : enemies) {
+        if (!enemy.alive || enemy.aiEntity == nullptr) {
           continue;
         }
 
-        if (enemyMarineTexture != nullptr && enemy.aiEntity != nullptr) {
-          ai::Enemy::applyLegionPalette(enemyMarineTexture, enemy.legion);
-          enemy.aiEntity->render(renderer, enemyMarineTexture);
-        } else if (enemy.aiEntity != nullptr) {
+        if (enemy.visual && enemyMarineTexture != nullptr) {
+          ySortedEntities.push_back(enemy.visual.get());
+        }
+      }
+
+      if (garroSpriteTexture != nullptr) {
+        ySortedEntities.push_back(&garroVisual);
+      }
+
+      retro::sortEntitiesByY(ySortedEntities);
+      for (auto* entity : ySortedEntities) {
+        entity->render(renderer, animTimer);
+      }
+
+      for (const auto& enemy : enemies) {
+        if (!enemy.alive || enemy.aiEntity == nullptr) {
+          continue;
+        }
+        if (enemy.visual == nullptr || enemyMarineTexture == nullptr) {
           drawTraitor(renderer, enemy.aiEntity->position(), walkFrame);
         }
       }
 
-      if (enemyMarineTexture != nullptr) {
-        SDL_SetTextureColorMod(enemyMarineTexture, 255, 255, 255);
+      if (garroSpriteTexture == nullptr) {
+        if (garroPlayerReady) {
+          garroPlayer.render(renderer);
+        } else {
+          drawGarro(renderer, player, facingDir, walkFrame);
+        }
       }
 
       SDL_SetRenderDrawColor(renderer, 230, 90, 90, 255);
       for (const auto& shot : enemyShots) {
         SDL_Rect r{static_cast<int>(shot.pos.x) - 3, static_cast<int>(shot.pos.y) - 3, 6, 6};
         SDL_RenderFillRect(renderer, &r);
-      }
-
-      if (garroPlayerReady) {
-        garroPlayer.render(renderer);
-      } else {
-        drawGarro(renderer, player, facingDir, walkFrame);
       }
 
       if (garroPlayerReady && garroPlayer.isSwordSwingActive()) {
@@ -564,6 +690,10 @@ int Game::run() {
   if (enemyMarineTexture != nullptr) {
     SDL_DestroyTexture(enemyMarineTexture);
     enemyMarineTexture = nullptr;
+  }
+  if (garroSpriteTexture != nullptr) {
+    SDL_DestroyTexture(garroSpriteTexture);
+    garroSpriteTexture = nullptr;
   }
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
