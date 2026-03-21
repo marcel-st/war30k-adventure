@@ -38,7 +38,11 @@ You play as Nathaniel Garro during the Horus Heresy, surviving Isstvan V, crossi
 
 ![Gameplay - Isstvan V](docs/images/gameplay-istvaan.svg)
 
+_Current build: Garro sword arc strike with knockback response, projectile pressure, and active minimap contacts._
+
 ![Gameplay - Terra](docs/images/gameplay-terra.svg)
+
+_Current build: mixed legion palette variants, aggro pursuit states, and objective relay approach under fire._
 
 ## Controls
 
