@@ -28,9 +28,13 @@
 
   <path d="M292 355 A65 65 0 0 1 346 305" fill="none" stroke="#ffe68c" stroke-width="10" stroke-linecap="round" opacity="0.85"/>
   <circle cx="338" cy="312" r="12" fill="#ffe98e" opacity="0.88"/>
+  <rect x="300" y="270" width="104" height="22" fill="#101216" opacity="0.9"/>
+  <text x="306" y="286" fill="#ffe68c" style="font-size:14px;font-family:monospace;">SWORD ARC</text>
 
   <rect x="352" y="300" width="34" height="34" fill="#8d2f8f"/>
   <rect x="352" y="300" width="34" height="3" fill="#e2b3ff"/>
+  <rect x="356" y="340" width="138" height="22" fill="#101216" opacity="0.9"/>
+  <text x="362" y="356" fill="#f0d6ff" style="font-size:14px;font-family:monospace;">KNOCKBACK PUSH</text>
 
   <rect x="426" y="334" width="34" height="34" fill="#9db5df"/>
   <rect x="426" y="334" width="34" height="3" fill="#f5f8ff"/>
@@ -55,6 +59,8 @@
 
   <rect x="970" y="18" width="292" height="168" fill="#0e1012" stroke="#bfbfbf" stroke-width="2" opacity="0.95"/>
   <rect x="986" y="34" width="260" height="136" fill="#1b1f25"/>
+  <rect x="992" y="40" width="106" height="18" fill="#0e1012" opacity="0.95"/>
+  <text x="998" y="53" fill="#d9ea7a" style="font-size:12px;font-family:monospace;">MINIMAP AGGRO</text>
   <rect x="1227" y="96" width="8" height="8" fill="#f0f0f0"/>
   <rect x="1074" y="106" width="4" height="4" fill="#c75353"/>
   <rect x="1139" y="78" width="4" height="4" fill="#c75353"/>
