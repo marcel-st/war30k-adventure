@@ -1,5 +1,5 @@
 <svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1280" height="720" fill="#221717"/>
+  <rect width="1280" height="720" fill="#211615"/>
   <g opacity="0.88">
     <rect x="0" y="0" width="1280" height="32" fill="#3d2323"/>
     <rect x="0" y="688" width="1280" height="32" fill="#3d2323"/>
@@ -17,7 +17,7 @@
   <rect x="1100" y="300" width="100" height="120" fill="#b9c95f" stroke="#edf4b0" stroke-width="4"/>
   <rect x="1106" y="306" width="88" height="10" fill="#f5ffd2" opacity="0.75"/>
 
-  <g transform="translate(220,342)">
+  <g transform="translate(232,344)">
     <rect x="0" y="0" width="38" height="38" fill="#525c4c"/>
     <rect x="4" y="3" width="30" height="3" fill="#eef5d7"/>
     <rect x="7" y="8" width="10" height="8" fill="#d6dfc5"/>
@@ -26,13 +26,19 @@
     <rect x="14" y="12" width="10" height="2" fill="#e4ecff"/>
   </g>
 
+  <path d="M292 355 A65 65 0 0 1 346 305" fill="none" stroke="#ffe68c" stroke-width="10" stroke-linecap="round" opacity="0.85"/>
+  <circle cx="338" cy="312" r="12" fill="#ffe98e" opacity="0.88"/>
+
+  <rect x="352" y="300" width="34" height="34" fill="#8d2f8f"/>
+  <rect x="352" y="300" width="34" height="3" fill="#e2b3ff"/>
+
+  <rect x="426" y="334" width="34" height="34" fill="#9db5df"/>
+  <rect x="426" y="334" width="34" height="3" fill="#f5f8ff"/>
+
+  <rect x="492" y="224" width="34" height="34" fill="#8d2f8f"/>
+  <rect x="492" y="224" width="34" height="3" fill="#e2b3ff"/>
+
   <g>
-    <rect x="460" y="220" width="30" height="30" fill="#9c3838"/>
-    <rect x="460" y="220" width="30" height="3" fill="#ffb9b9"/>
-
-    <rect x="520" y="430" width="30" height="30" fill="#9c3838"/>
-    <rect x="520" y="430" width="30" height="3" fill="#ffb9b9"/>
-
     <rect x="870" y="255" width="30" height="30" fill="#9c3838"/>
     <rect x="870" y="255" width="30" height="3" fill="#ffb9b9"/>
 
@@ -41,9 +47,10 @@
   </g>
 
   <g fill="#f07b7b">
-    <circle cx="548" cy="445" r="4"/>
-    <circle cx="564" cy="438" r="4"/>
-    <circle cx="580" cy="430" r="4"/>
+    <circle cx="548" cy="336" r="4"/>
+    <circle cx="564" cy="328" r="4"/>
+    <circle cx="580" cy="322" r="4"/>
+    <circle cx="596" cy="318" r="4"/>
   </g>
 
   <rect x="970" y="18" width="292" height="168" fill="#0e1012" stroke="#bfbfbf" stroke-width="2" opacity="0.95"/>
@@ -52,9 +59,12 @@
   <rect x="1074" y="106" width="4" height="4" fill="#c75353"/>
   <rect x="1139" y="78" width="4" height="4" fill="#c75353"/>
   <rect x="1183" y="126" width="4" height="4" fill="#c75353"/>
+  <rect x="1020" y="118" width="4" height="4" fill="#c75353"/>
+  <rect x="1048" y="84" width="4" height="4" fill="#9f6bdf"/>
+  <rect x="1096" y="142" width="4" height="4" fill="#9db5df"/>
   <rect x="1200" y="90" width="5" height="5" fill="#d9ea7a"/>
 
   <rect x="0" y="0" width="1280" height="90" fill="#101216" opacity="0.93"/>
   <text x="24" y="42" fill="#e8e8e8" style="font-size:30px;font-family:monospace;">ISTVAAN V - BROKEN LOYALTY</text>
-  <text x="24" y="74" fill="#e8e8e8" style="font-size:24px;font-family:monospace;">HP 93       REACH EXTRACTION 0/1</text>
+  <text x="24" y="74" fill="#e8e8e8" style="font-size:24px;font-family:monospace;">HP 93       REACH EXTRACTION 0/1   KNOCKBACK HIT!</text>
 </svg>
