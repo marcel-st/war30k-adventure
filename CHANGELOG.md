@@ -2,6 +2,24 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.5.0] - 2026-03-22
+
+### Added
+- `Player` class for Nathaniel Garro with ALttP-style 4-direction sprite state (`Up`, `Down`, `Left`, `Right`).
+- `Player::render()` path using `SDL_RenderCopyEx` with frame selection from a master sprite sheet.
+- Player sword swing state with a 180-degree arc hitbox and tuned slash cadence.
+- `Enemy` base class module (`war30k::ai`) with derived variants:
+  - `DeathGuardTraitorEnemy`
+  - `NurgleDaemonEnemy`
+- Zelda-style enemy AI (random wander + aggro pursuit by player distance).
+- Legion palette swap helper using `SDL_SetTextureColorMod`.
+
+### Changed
+- Integrated `Player` class into gameplay loop for movement, sword collision, and rendering.
+- Replaced runtime enemy movement logic with Enemy base-class AI updates.
+- Added knockback-on-hit behavior that separates enemies from Garro's collision box.
+- Updated README architecture and feature documentation for Player + Enemy systems.
+
 ## [0.4.0] - 2026-03-22
 
 ### Added

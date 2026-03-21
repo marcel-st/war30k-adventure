@@ -15,6 +15,8 @@ add_executable(
   src/core/world.cpp
   src/core/render.cpp
   src/core/animated_sprite.cpp
+  src/core/player.cpp
+  src/core/enemy.cpp
 )
 
 target_include_directories(war30k_adventure PRIVATE include)

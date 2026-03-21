@@ -15,8 +15,12 @@ You play as Nathaniel Garro during the Horus Heresy, surviving Isstvan V, crossi
 - Input: keyboard + game controller
 - Campaign: 4 connected story stages with objectives and narrative panels
 - Combat: melee attack arc + enemy ranged projectiles
+- Combat: Player sword swing arc with knockback-driven hit response
 - Tactical UI: objective tracking, HP HUD, and minimap
 - Animation: JSON-driven spritesheets with 8-direction state switching (`Idle` / `Walk`)
+- Player system: ALttP-style 4-direction sprite state (`Up/Down/Left/Right`) and sword state
+- Enemy AI: Zelda-style wander + aggro behavior with distance-triggered pursuit
+- Legion palette swaps: dynamic texture tinting (e.g., Emperor's Children, World Eaters)
 - Visual style: procedural edge-highlighting pass for top armor edges (30K 'Eavy Metal-inspired)
 
 ## Story Campaign
@@ -64,7 +68,9 @@ You play as Nathaniel Garro during the Horus Heresy, surviving Isstvan V, crossi
 include/
   animated_sprite.hpp    # JSON spritesheet animator with setAnimation(state, direction)
   core_types.hpp        # Shared constants, data structs, enums, math signatures
+  enemy.hpp             # Enemy base class, Zelda-style AI, palette swaps, knockback
   font.hpp              # Bitmap font interface
+  player.hpp            # Garro player class with SpriteState and sword arc collision
   world.hpp             # Stages, map generation, collision
   render.hpp            # Sprite/tile/minimap rendering
   game.hpp              # Game class interface
@@ -75,12 +81,15 @@ src/
   core/
     animated_sprite.cpp # AnimatedSprite implementation (JSON + frame timing + motion overlays)
     common.cpp          # Math + bitmap font implementation
+    enemy.cpp           # Enemy AI implementation (wander/aggro + knockback + palette)
+    player.cpp          # Player implementation (4-dir render + sword swing arc)
     world.cpp           # Stage data + map/collision implementation
     render.cpp          # Tile/sprite/minimap drawing implementation
 
 assets/
   garro_sheet.bmp       # Procedural Garro spritesheet
   garro_frames.json     # Garro frame definitions
+  sample_frames.json    # Generic sample frame map for sprite animation reference
   traitor_sheet.bmp     # Procedural traitor spritesheet
   traitor_frames.json   # Traitor frame definitions
 
@@ -96,6 +105,8 @@ scripts/
 - Fixed-size tile grid with lightweight collision checks.
 - Frame delta clamping to avoid simulation spikes.
 - Animation work moved into dedicated module to reduce game-loop complexity.
+- Runtime enemy behavior moved to reusable Enemy base classes.
+- Knockback overlap resolution prevents enemy/player collision stacking.
 - Rendering combines tile primitives with sprite-sheet blits for low overhead.
 
 ## Linux Setup

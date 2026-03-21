@@ -5,13 +5,15 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <memory>
 #include <random>
 #include <string>
 #include <vector>
 
-#include "animated_sprite.hpp"
 #include "core_types.hpp"
+#include "enemy.hpp"
 #include "font.hpp"
+#include "player.hpp"
 #include "render.hpp"
 #include "world.hpp"
 
@@ -19,36 +21,13 @@ namespace war30k {
 
 namespace {
 
-int toDirectionIndex(Vec2 v, int fallback = 4) {
-  if (std::fabs(v.x) < 0.001f && std::fabs(v.y) < 0.001f) {
-    return fallback;
-  }
-
-  const float deg = std::atan2(v.y, v.x) * (180.0f / 3.14159265f);
-
-  if (deg >= -112.5f && deg < -67.5f) {
-    return 0;
-  }
-  if (deg >= -67.5f && deg < -22.5f) {
-    return 1;
-  }
-  if (deg >= -22.5f && deg < 22.5f) {
-    return 2;
-  }
-  if (deg >= 22.5f && deg < 67.5f) {
-    return 3;
-  }
-  if (deg >= 67.5f && deg < 112.5f) {
-    return 4;
-  }
-  if (deg >= 112.5f && deg < 157.5f) {
-    return 5;
-  }
-  if (deg >= 157.5f || deg < -157.5f) {
-    return 6;
-  }
-  return 7;
-}
+struct RuntimeEnemy {
+  std::unique_ptr<war30k::ai::Enemy> aiEntity;
+  bool alive = true;
+  float shootTimer = 0.0f;
+  int hitPoints = 2;
+  std::string legion;
+};
 
 }  // namespace
 
@@ -95,8 +74,17 @@ int Game::run() {
   const std::vector<Stage> stages = buildStages();
   std::mt19937 rng(std::random_device{}());
 
-  AnimatedSprite garroSprite(renderer, "assets/garro_sheet.bmp", "assets/garro_frames.json");
-  const bool garroSpriteReady = garroSprite.isValid();
+  Player garroPlayer(renderer, "assets/garro_sheet.bmp", 32, 32, 1.5f);
+  const bool garroPlayerReady = garroPlayer.isValid();
+
+  SDL_Texture* enemyMarineTexture = nullptr;
+  {
+    SDL_Surface* marineSurface = SDL_LoadBMP("assets/traitor_sheet.bmp");
+    if (marineSurface != nullptr) {
+      enemyMarineTexture = SDL_CreateTextureFromSurface(renderer, marineSurface);
+      SDL_FreeSurface(marineSurface);
+    }
+  }
 
   Vec2 player{120.0f, WINDOW_HEIGHT * 0.5f};
   Vec2 facingVec{1.0f, 0.0f};
@@ -104,7 +92,6 @@ int Game::run() {
   float playerHealth = 100.0f;
   float enemyDamageTimer = 0.0f;
   float attackTimer = 0.0f;
-  float swingTimer = 0.0f;
   float animTimer = 0.0f;
 
   int stageIndex = 0;
@@ -118,12 +105,10 @@ int Game::run() {
   PlayPhase phase = PlayPhase::Briefing;
 
   SDL_Rect targetZone{WINDOW_WIDTH - 140, WINDOW_HEIGHT / 2 - 70, 96, 128};
-  std::vector<Enemy> enemies;
-  std::vector<AnimatedSprite> enemySprites;
+  std::vector<RuntimeEnemy> enemies;
   std::vector<Beacon> beacons;
   std::vector<Projectile> enemyShots;
   std::vector<std::string> stageMap;
-  bool enemySpritesReady = true;
 
   auto resetRun = [&]() {
     stageIndex = 0;
@@ -141,33 +126,36 @@ int Game::run() {
     stageMap = buildStageMap(idx);
 
     player = {96.0f, (MAP_HEIGHT / 2.0f) * TILE_SIZE};
+    garroPlayer.setPosition(player);
     facingVec = {1.0f, 0.0f};
     facingDir = Facing::Right;
     targetZone = {WINDOW_WIDTH - 136, WINDOW_HEIGHT / 2 - 64, 96, 128};
 
     enemies.clear();
-    enemySprites.clear();
     beacons.clear();
     enemyShots.clear();
 
     enemies.reserve(stage.enemyCount);
-    enemySprites.reserve(stage.enemyCount);
     enemyShots.reserve(stage.enemyCount * 2);
-    enemySpritesReady = true;
 
     for (int i = 0; i < stage.enemyCount; ++i) {
       Vec2 spawn = randomFreePosition(rng, stageMap, player, 180.0f);
-      Enemy enemy;
-      enemy.pos = spawn;
-      enemy.speed = stage.enemySpeed;
-      enemy.shootTimer = (static_cast<float>(i % 7) / 7.0f) * PROJECTILE_COOLDOWN;
-      enemy.alive = true;
-      enemies.push_back(enemy);
-
-      enemySprites.emplace_back(renderer, "assets/traitor_sheet.bmp", "assets/traitor_frames.json");
-      if (!enemySprites.back().isValid()) {
-        enemySpritesReady = false;
+      RuntimeEnemy runtimeEnemy;
+      if (i % 5 == 0) {
+        runtimeEnemy.aiEntity = std::make_unique<ai::NurgleDaemonEnemy>(spawn);
+        runtimeEnemy.hitPoints = 3;
+        runtimeEnemy.legion = "World Eaters";
+      } else {
+        runtimeEnemy.aiEntity = std::make_unique<ai::DeathGuardTraitorEnemy>(spawn);
+        runtimeEnemy.hitPoints = 2;
+        runtimeEnemy.legion = "Emperor's Children";
       }
+
+      runtimeEnemy.aiEntity->setMovementSpeeds(stage.enemySpeed * 0.6f, stage.enemySpeed);
+      runtimeEnemy.aiEntity->setSpriteSourceRect({0, 0, 32, 32});
+      runtimeEnemy.shootTimer = (static_cast<float>(i % 7) / 7.0f) * PROJECTILE_COOLDOWN;
+      runtimeEnemy.alive = true;
+      enemies.push_back(std::move(runtimeEnemy));
     }
 
     if (stage.objectiveType == ObjectiveType::ActivateBeacons) {
@@ -232,9 +220,6 @@ int Game::run() {
     if (attackTimer > 0.0f) {
       attackTimer -= dt;
     }
-    if (swingTimer > 0.0f) {
-      swingTimer -= dt;
-    }
 
     if (phase != PlayPhase::GameOver && phase != PlayPhase::Victory) {
       const Stage& stage = stages[stageIndex];
@@ -298,36 +283,59 @@ int Game::run() {
           facingDir = facingFromVector(input, facingDir);
         }
 
-        const int playerDirIndex = toDirectionIndex(facingVec, 2);
-        if (garroSpriteReady) {
-          garroSprite.setAnimation(playerMoving ? "Walk" : "Idle", playerDirIndex);
-          garroSprite.update(dt);
+        if (garroPlayerReady) {
+          garroPlayer.setMoveIntent(input.x, input.y);
         }
 
         moveWithCollision(stageMap,
                           player,
                           {input.x * PLAYER_SPEED * dt, input.y * PLAYER_SPEED * dt},
                           ENTITY_RADIUS);
+        if (garroPlayerReady) {
+          garroPlayer.setPosition(player);
+        }
 
         if (attackPressed && attackTimer <= 0.0f) {
           attackTimer = ATTACK_COOLDOWN;
-          swingTimer = ATTACK_ARC_TIME;
+          if (garroPlayerReady) {
+            garroPlayer.startSwordSwing();
+          }
+          SDL_Rect playerRectForKnockback{static_cast<int>(player.x) - 14,
+                                          static_cast<int>(player.y) - 14,
+                                          28,
+                                          28};
           for (auto& enemy : enemies) {
             if (!enemy.alive) {
               continue;
             }
-            const Vec2 toEnemy{enemy.pos.x - player.x, enemy.pos.y - player.y};
-            const float d2 = toEnemy.x * toEnemy.x + toEnemy.y * toEnemy.y;
-            if (d2 > ATTACK_RANGE * ATTACK_RANGE) {
-              continue;
-            }
-            const Vec2 dirToEnemy = normalize(toEnemy);
-            const float dot = dirToEnemy.x * facingVec.x + dirToEnemy.y * facingVec.y;
-            if (dot > 0.2f) {
-              enemy.alive = false;
-              progressCount++;
+            if (garroPlayerReady) {
+              SDL_Rect enemyRect = enemy.aiEntity->collisionBox();
+              if (garroPlayer.swordHitIntersects(enemyRect)) {
+                enemy.aiEntity->knockbackFromPlayer(playerRectForKnockback, 26);
+                enemy.hitPoints -= 1;
+                if (enemy.hitPoints <= 0) {
+                  enemy.alive = false;
+                  progressCount++;
+                }
+              }
+            } else {
+              Vec2 enemyPos = enemy.aiEntity->position();
+              const Vec2 toEnemy{enemyPos.x - player.x, enemyPos.y - player.y};
+              const float d2 = toEnemy.x * toEnemy.x + toEnemy.y * toEnemy.y;
+              if (d2 <= ATTACK_RANGE * ATTACK_RANGE) {
+                enemy.aiEntity->knockbackFromPlayer(playerRectForKnockback, 20);
+                enemy.hitPoints -= 1;
+                if (enemy.hitPoints <= 0) {
+                  enemy.alive = false;
+                  progressCount++;
+                }
+              }
             }
           }
+        }
+
+        if (garroPlayerReady) {
+          garroPlayer.update(dt);
         }
 
         for (std::size_t i = 0; i < enemies.size(); ++i) {
@@ -336,33 +344,23 @@ int Game::run() {
             continue;
           }
 
-          const Vec2 beforeMove = enemy.pos;
-          Vec2 chase{player.x - enemy.pos.x, player.y - enemy.pos.y};
-          chase = normalize(chase);
-          moveWithCollision(stageMap,
-                            enemy.pos,
-                            {chase.x * enemy.speed * dt, chase.y * enemy.speed * dt},
-                            ENTITY_RADIUS);
+          SDL_Point playerPoint{static_cast<int>(player.x), static_cast<int>(player.y)};
+          enemy.aiEntity->updateAI(dt, playerPoint, rng);
 
-          if (enemySpritesReady && i < enemySprites.size()) {
-            const bool enemyMoving = distanceSquared(beforeMove, enemy.pos) > 0.2f;
-            const int enemyDirIndex = toDirectionIndex(chase, 4);
-            enemySprites[i].setAnimation(enemyMoving ? "Walk" : "Idle", enemyDirIndex);
-            enemySprites[i].update(dt);
-          }
+          Vec2 enemyPos = enemy.aiEntity->position();
 
           enemy.shootTimer -= dt;
-          if (enemy.shootTimer <= 0.0f && distanceSquared(enemy.pos, player) < 320.0f * 320.0f) {
-            Vec2 dir = normalize({player.x - enemy.pos.x, player.y - enemy.pos.y});
+          if (enemy.shootTimer <= 0.0f && distanceSquared(enemyPos, player) < 320.0f * 320.0f) {
+            Vec2 dir = normalize({player.x - enemyPos.x, player.y - enemyPos.y});
             Projectile shot;
-            shot.pos = enemy.pos;
+            shot.pos = enemyPos;
             shot.vel = {dir.x * PROJECTILE_SPEED, dir.y * PROJECTILE_SPEED};
             shot.alive = true;
             enemyShots.push_back(shot);
             enemy.shootTimer = PROJECTILE_COOLDOWN;
           }
 
-          if (distanceSquared(enemy.pos, player) < 24.0f * 24.0f && enemyDamageTimer <= 0.0f) {
+          if (distanceSquared(enemyPos, player) < 24.0f * 24.0f && enemyDamageTimer <= 0.0f) {
             playerHealth -= ENEMY_TOUCH_DAMAGE;
             enemyDamageTimer = ENEMY_DAMAGE_COOLDOWN;
             if (playerHealth <= 0.0f) {
@@ -424,9 +422,10 @@ int Game::run() {
           enemyShots.clear();
         }
       }
-    } else if (garroSpriteReady) {
-      garroSprite.setAnimation("Idle", toDirectionIndex(facingVec, 2));
-      garroSprite.update(dt);
+    } else if (garroPlayerReady) {
+      garroPlayer.setMoveIntent(0.0f, 0.0f);
+      garroPlayer.setPosition(player);
+      garroPlayer.update(dt);
     }
 
     const Stage& currentStage = stages[stageIndex < static_cast<int>(stages.size()) ? stageIndex : stages.size() - 1];
@@ -457,14 +456,16 @@ int Game::run() {
           continue;
         }
 
-        if (enemySpritesReady && i < enemySprites.size() && enemySprites[i].isValid()) {
-          enemySprites[i].draw(renderer,
-                               static_cast<int>(enemy.pos.x) - 24,
-                               static_cast<int>(enemy.pos.y) - 24,
-                               1.5f);
-        } else {
-          drawTraitor(renderer, enemy.pos, walkFrame);
+        if (enemyMarineTexture != nullptr && enemy.aiEntity != nullptr) {
+          ai::Enemy::applyLegionPalette(enemyMarineTexture, enemy.legion);
+          enemy.aiEntity->render(renderer, enemyMarineTexture);
+        } else if (enemy.aiEntity != nullptr) {
+          drawTraitor(renderer, enemy.aiEntity->position(), walkFrame);
         }
+      }
+
+      if (enemyMarineTexture != nullptr) {
+        SDL_SetTextureColorMod(enemyMarineTexture, 255, 255, 255);
       }
 
       SDL_SetRenderDrawColor(renderer, 230, 90, 90, 255);
@@ -473,25 +474,30 @@ int Game::run() {
         SDL_RenderFillRect(renderer, &r);
       }
 
-      if (garroSpriteReady) {
-        garroSprite.draw(renderer,
-                         static_cast<int>(player.x) - 24,
-                         static_cast<int>(player.y) - 24,
-                         1.5f);
+      if (garroPlayerReady) {
+        garroPlayer.render(renderer);
       } else {
         drawGarro(renderer, player, facingDir, walkFrame);
       }
 
-      if (swingTimer > 0.0f) {
+      if (garroPlayerReady && garroPlayer.isSwordSwingActive()) {
+        SDL_Rect swing = garroPlayer.swordSwingHitbox();
         SDL_SetRenderDrawColor(renderer, 255, 235, 120, 210);
-        SDL_Rect swing{static_cast<int>(player.x + facingVec.x * 28.0f) - 20,
-                       static_cast<int>(player.y + facingVec.y * 28.0f) - 20,
-                       40,
-                       40};
         SDL_RenderFillRect(renderer, &swing);
       }
 
-      drawMiniMap(renderer, stageMap, player, enemies, beacons, targetZone);
+      std::vector<Enemy> miniEnemies;
+      miniEnemies.reserve(enemies.size());
+      for (const auto& enemy : enemies) {
+        if (!enemy.alive || enemy.aiEntity == nullptr) {
+          continue;
+        }
+        Enemy minimapEnemy;
+        minimapEnemy.pos = enemy.aiEntity->position();
+        minimapEnemy.alive = true;
+        miniEnemies.push_back(minimapEnemy);
+      }
+      drawMiniMap(renderer, stageMap, player, miniEnemies, beacons, targetZone);
     }
 
     SDL_Color uiColor{240, 240, 240, 255};
@@ -554,6 +560,10 @@ int Game::run() {
 
   if (controller) {
     SDL_GameControllerClose(controller);
+  }
+  if (enemyMarineTexture != nullptr) {
+    SDL_DestroyTexture(enemyMarineTexture);
+    enemyMarineTexture = nullptr;
   }
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
