@@ -36,6 +36,8 @@ var _combat_completed: bool = false
 var _is_spawning_wave: bool = false
 var _encounter_token: int = 0
 var _mission_failed: bool = false
+var _can_restart: bool = false
+var _restart_debounce: float = 0.0
 
 func _ready() -> void:
 	GameState.reset_run()
@@ -46,6 +48,12 @@ func _ready() -> void:
 	_start_next_wave()
 
 func _physics_process(_delta: float) -> void:
+	if _restart_debounce > 0.0:
+		_restart_debounce = maxf(0.0, _restart_debounce - _delta)
+	if _can_restart and _restart_debounce <= 0.0:
+		if Input.is_action_just_pressed("restart_mission"):
+			get_tree().reload_current_scene()
+			return
 	if _mission_failed:
 		return
 	_cleanup_dead_enemies()
@@ -55,6 +63,9 @@ func _physics_process(_delta: float) -> void:
 func _on_extraction_body_entered(body: Node) -> void:
 	if body.is_in_group("player"):
 		GameState.complete_objective("Extraction reached. Loyalist warning secured.")
+		GameState.set_mission_state("victory", "Extraction reached")
+		_can_restart = true
+		_restart_debounce = 0.25
 
 func _refresh_player_group_tag() -> void:
 	var player: Node3D = get_node_or_null("Player")
@@ -187,5 +198,7 @@ func _on_enemy_tree_exited(enemy: Node3D) -> void:
 func _on_mission_state_changed(new_state: String) -> void:
 	if new_state == "failed":
 		_mission_failed = true
+		_can_restart = true
+		_restart_debounce = 0.25
 		_encounter_token += 1
 		extraction_zone.monitoring = false

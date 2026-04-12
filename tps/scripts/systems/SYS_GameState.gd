@@ -162,6 +162,13 @@ func _setup_default_input_actions() -> void:
 		_key_event(KEY_R),
 		_joy_button_event(JOY_BUTTON_Y)
 	])
+	_ensure_action("restart_mission", [
+		_key_event(KEY_ENTER),
+		_key_event(KEY_KP_ENTER),
+		_key_event(KEY_R),
+		_joy_button_event(JOY_BUTTON_START),
+		_joy_button_event(JOY_BUTTON_BACK)
+	])
 	_ensure_action("sprint", [
 		_key_event(KEY_SHIFT),
 		_joy_button_event(JOY_BUTTON_LEFT_STICK)

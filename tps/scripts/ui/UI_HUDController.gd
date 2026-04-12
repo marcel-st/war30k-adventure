@@ -57,8 +57,8 @@ func _on_mission_state_changed(run_state: String, _reason: String) -> void:
 		return
 	match run_state:
 		"failed":
-			status_label.text = "STATUS: MISSION FAILED - Press R to restart"
+			status_label.text = "STATUS: MISSION FAILED - Press R/Enter/Start to restart"
 		"victory":
-			status_label.text = "STATUS: OBJECTIVE COMPLETE - Press R to replay"
+			status_label.text = "STATUS: OBJECTIVE COMPLETE - Press R/Enter/Start to replay"
 		_:
 			status_label.text = "STATUS: ACTIVE"

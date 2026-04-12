@@ -23,7 +23,7 @@ Deliver one playable third-person shooter mission from spawn to extraction with 
   - active combat
   - failed (player death)
   - victory (extraction reached)
-  - restart (`F8`/`R`) support
+  - restart (`Enter`/`R`/gamepad `Start`) support
 - Death Guard-themed placeholder materials and moody battlefield lighting.
 
 ## Out of scope for this commit
