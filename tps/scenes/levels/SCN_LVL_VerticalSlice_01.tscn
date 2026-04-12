@@ -1,0 +1,89 @@
+[gd_scene load_steps=10 format=3 uid="uid://j3o3so2i0w6w"]
+
+[ext_resource type="Script" path="res://scripts/mission/MIS_VS01_Controller.gd" id="1_0y8yb"]
+[ext_resource type="PackedScene" path="res://scenes/player/SCN_PlayerMarine.tscn" id="2_hf5yn"]
+[ext_resource type="PackedScene" path="res://scenes/ui/SCN_UI_HUD.tscn" id="3_tr4q6"]
+
+[sub_resource type="Environment" id="Environment_hg35v"]
+background_mode = 2
+background_color = Color(0.0352941, 0.0392157, 0.0431373, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.352941, 0.396078, 0.454902, 1)
+ambient_light_energy = 0.6
+fog_enabled = true
+fog_light_color = Color(0.235294, 0.282353, 0.313726, 1)
+fog_light_energy = 0.7
+fog_sun_scatter = 0.1
+dof_blur_far_enabled = true
+dof_blur_far_distance = 65.0
+dof_blur_far_transition = 12.0
+dof_blur_far_amount = 0.08
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
+size = Vector3(64, 1, 64)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_extract"]
+size = Vector3(5, 2, 5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_floor"]
+size = Vector3(64, 1, 64)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
+albedo_color = Color(0.231373, 0.239216, 0.243137, 1)
+metallic = 0.18
+roughness = 0.88
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_extract"]
+albedo_color = Color(0.168627, 0.25098, 0.188235, 0.55)
+transparency = 1
+metallic = 0.05
+roughness = 0.4
+
+[node name="SCN_LVL_VerticalSlice_01" type="Node3D"]
+script = ExtResource("1_0y8yb")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_hg35v")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.888835, 0, -0.458227, -0.208392, 0.890408, -0.404138, 0.408312, 0.455629, 0.791481, 0, 12.967, 0)
+light_color = Color(0.823529, 0.854902, 0.901961, 1)
+light_energy = 2.1
+shadow_enabled = true
+directional_shadow_mode = 1
+
+[node name="Ground" type="StaticBody3D" parent="."]
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground"]
+shape = SubResource("BoxShape3D_floor")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Ground"]
+mesh = SubResource("BoxMesh_floor")
+surface_material_override/0 = SubResource("StandardMaterial3D_floor")
+
+[node name="PlayerSpawn" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+
+[node name="ExtractionZone" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -22)
+collision_layer = 1
+collision_mask = 1
+monitoring = true
+monitorable = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ExtractionZone"]
+shape = SubResource("BoxShape3D_extract")
+
+[node name="ExtractPadMesh" type="MeshInstance3D" parent="ExtractionZone"]
+mesh = SubResource("BoxMesh_floor")
+surface_material_override/0 = SubResource("StandardMaterial3D_extract")
+scale = Vector3(0.08, 0.02, 0.08)
+position = Vector3(0, -0.45, 0)
+
+[node name="Player" parent="." instance=ExtResource("2_hf5yn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+groups = ["player"]
+
+[node name="HUD" parent="." instance=ExtResource("3_tr4q6")]

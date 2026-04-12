@@ -4,3 +4,8 @@ build/
 *.so
 *.a
 *.out
+
+# Godot TPS project artifacts
+tps/.godot/
+tps/.import/
+tps/export_presets.cfg
