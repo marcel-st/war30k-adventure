@@ -21,7 +21,7 @@ const PROJECTILE_SCENE: PackedScene = preload("res://scenes/enemies/SCN_EnemyPro
 @onready var visual_root: Node3D = $VisualRoot
 @onready var body_mesh: MeshInstance3D = $VisualRoot/BodyMesh
 @onready var awareness_area: Area3D = $Awareness
-@onready var muzzle: Marker3D = $VisualRoot/Muzzle
+@onready var muzzle: Marker3D = $VisualRoot/WeaponMesh/Muzzle
 
 var gravity: float = 24.0
 var health: float = 45.0
