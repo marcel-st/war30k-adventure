@@ -46,9 +46,9 @@ func _apply_gravity(delta: float) -> void:
 		velocity.y = 0.0
 
 func _process_movement(delta: float) -> void:
-	var input_2d := Input.get_vector("move_left", "move_right", "move_forward", "move_backward")
-	var basis := camera_aim.get_move_basis()
-	var move_dir := (basis.x * input_2d.x + -basis.z * input_2d.y)
+	var input_2d: Vector2 = Input.get_vector("move_left", "move_right", "move_forward", "move_backward")
+	var basis: Basis = camera_aim.get_move_basis()
+	var move_dir: Vector3 = (basis.x * input_2d.x + -basis.z * input_2d.y)
 	move_dir.y = 0.0
 	move_dir = move_dir.normalized()
 
@@ -56,7 +56,7 @@ func _process_movement(delta: float) -> void:
 	if Input.is_action_pressed("sprint"):
 		target_speed = sprint_speed
 
-	var target_velocity := move_dir * target_speed
+	var target_velocity: Vector3 = move_dir * target_speed
 	var horiz_velocity := Vector3(velocity.x, 0.0, velocity.z)
 	horiz_velocity = horiz_velocity.lerp(target_velocity, clamp(acceleration * delta, 0.0, 1.0))
 	velocity.x = horiz_velocity.x
@@ -89,7 +89,7 @@ func _process_combat() -> void:
 func apply_damage(raw_damage: float) -> void:
 	if raw_damage <= 0.0 or health <= 0.0:
 		return
-	var absorbed := min(armor, raw_damage * 0.65)
+	var absorbed: float = min(armor, raw_damage * 0.65)
 	armor -= absorbed
 	health = max(0.0, health - (raw_damage - absorbed))
 	GameState.health = health

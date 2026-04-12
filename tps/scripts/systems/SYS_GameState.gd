@@ -26,8 +26,8 @@ func reset_run() -> void:
 	emit_signal("objective_changed", objective_text, objective_completed)
 
 func configure_ammo(magazine: int, reserve: int) -> void:
-	ammo_in_magazine = max(0, magazine)
-	ammo_reserve = max(0, reserve)
+	ammo_in_magazine = maxi(0, magazine)
+	ammo_reserve = maxi(0, reserve)
 	emit_player_stats()
 
 func can_fire() -> bool:
@@ -45,8 +45,8 @@ func reload_magazine(max_magazine_size: int) -> bool:
 		return false
 	if ammo_in_magazine >= max_magazine_size or ammo_reserve <= 0:
 		return false
-	var needed := max_magazine_size - ammo_in_magazine
-	var moved := min(needed, ammo_reserve)
+	var needed: int = max_magazine_size - ammo_in_magazine
+	var moved: int = mini(needed, ammo_reserve)
 	ammo_in_magazine += moved
 	ammo_reserve -= moved
 	emit_player_stats()
@@ -55,9 +55,9 @@ func reload_magazine(max_magazine_size: int) -> bool:
 func damage_player(raw_damage: float) -> void:
 	if raw_damage <= 0.0 or health <= 0.0:
 		return
-	var armor_absorb := min(armor, raw_damage * 0.65)
+	var armor_absorb: float = minf(armor, raw_damage * 0.65)
 	armor -= armor_absorb
-	var health_damage := raw_damage - armor_absorb
+	var health_damage: float = raw_damage - armor_absorb
 	health = max(0.0, health - health_damage)
 	emit_player_stats()
 	if health <= 0.0:
@@ -122,7 +122,7 @@ func _setup_default_input_actions() -> void:
 func _ensure_action(action_name: String, events: Array[InputEvent]) -> void:
 	if not InputMap.has_action(action_name):
 		InputMap.add_action(action_name)
-	var existing_events := InputMap.action_get_events(action_name)
+	var existing_events: Array[InputEvent] = InputMap.action_get_events(action_name)
 	if existing_events.is_empty():
 		for event in events:
 			InputMap.action_add_event(action_name, event)

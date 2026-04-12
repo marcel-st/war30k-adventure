@@ -33,16 +33,16 @@ func trigger_fire(camera: Camera3D) -> void:
 		start_reload()
 		return
 	_fire_cooldown = 1.0 / max(0.1, fire_rate)
-	var from := camera.global_position
-	var to := from + (-camera.global_basis.z * range)
-	var space_state := get_world_3d().direct_space_state
-	var query := PhysicsRayQueryParameters3D.create(from, to)
+	var from: Vector3 = camera.global_position
+	var to: Vector3 = from + (-camera.global_basis.z * range)
+	var space_state: PhysicsDirectSpaceState3D = get_world_3d().direct_space_state
+	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(from, to)
 	query.collide_with_areas = true
-	var hit := space_state.intersect_ray(query)
+	var hit: Dictionary = space_state.intersect_ray(query)
 	if hit.has("position"):
-		var impact := hit["position"] as Vector3
+		var impact: Vector3 = hit["position"] as Vector3
 		_spawn_debug_tracer(from, impact)
-		var collider := hit.get("collider")
+		var collider: Variant = hit.get("collider")
 		if collider and collider.has_method("apply_damage"):
 			collider.apply_damage(damage)
 	else:
@@ -57,8 +57,8 @@ func start_reload() -> void:
 	_reload_timer = reload_duration
 
 func _spawn_debug_tracer(start: Vector3, finish: Vector3) -> void:
-	var mesh_instance := MeshInstance3D.new()
-	var tracer := ImmediateMesh.new()
+	var mesh_instance: MeshInstance3D = MeshInstance3D.new()
+	var tracer: ImmediateMesh = ImmediateMesh.new()
 	tracer.surface_begin(Mesh.PRIMITIVE_LINES)
 	tracer.surface_set_color(Color(1.0, 0.8, 0.3, 1.0))
 	tracer.surface_add_vertex(to_local(start))
@@ -66,5 +66,5 @@ func _spawn_debug_tracer(start: Vector3, finish: Vector3) -> void:
 	tracer.surface_end()
 	mesh_instance.mesh = tracer
 	add_child(mesh_instance)
-	var timer := get_tree().create_timer(0.08)
+	var timer: SceneTreeTimer = get_tree().create_timer(0.08)
 	timer.timeout.connect(mesh_instance.queue_free)
