@@ -35,15 +35,19 @@ var _active_enemies: Array[Node3D] = []
 var _combat_completed: bool = false
 var _is_spawning_wave: bool = false
 var _encounter_token: int = 0
+var _mission_failed: bool = false
 
 func _ready() -> void:
 	GameState.reset_run()
 	_refresh_player_group_tag()
 	extraction_zone.body_entered.connect(_on_extraction_body_entered)
+	GameState.mission_state_changed.connect(_on_mission_state_changed)
 	extraction_zone.monitoring = false
 	_start_next_wave()
 
 func _physics_process(_delta: float) -> void:
+	if _mission_failed:
+		return
 	_cleanup_dead_enemies()
 	if _active_enemies.is_empty() and not _combat_completed and not _is_spawning_wave:
 		_start_next_wave()
@@ -63,6 +67,7 @@ func _start_next_wave() -> void:
 		GameState.set_enemies_remaining(0)
 		GameState.set_objective("Combat lane secured. Move to extraction zone.")
 		GameState.push_event_message("Combat lane secured. Extraction corridor now open.")
+		GameState.set_mission_state("extract")
 		extraction_zone.monitoring = true
 		return
 
@@ -178,3 +183,9 @@ func _cleanup_dead_enemies() -> void:
 func _on_enemy_tree_exited(enemy: Node3D) -> void:
 	_active_enemies.erase(enemy)
 	GameState.set_enemies_remaining(_active_enemies.size())
+
+func _on_mission_state_changed(new_state: String) -> void:
+	if new_state == "failed":
+		_mission_failed = true
+		_encounter_token += 1
+		extraction_zone.monitoring = false

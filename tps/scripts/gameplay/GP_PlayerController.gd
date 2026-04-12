@@ -34,6 +34,8 @@ func _ready() -> void:
 	GameState.emit_player_stats()
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("restart_mission"):
+		GameState.request_restart()
 	if event.is_action_pressed("pause"):
 		_toggle_mouse_capture()
 
@@ -96,7 +98,7 @@ func _process_combat() -> void:
 
 	current_combat_move_speed_multiplier = boltgun.get_move_speed_multiplier()
 
-func apply_damage(raw_damage: float) -> void:
+func apply_damage(raw_damage: float, _source_position: Vector3 = Vector3.ZERO) -> void:
 	if raw_damage <= 0.0 or health <= 0.0:
 		return
 	var absorbed: float = min(armor, raw_damage * 0.65)
@@ -108,6 +110,8 @@ func apply_damage(raw_damage: float) -> void:
 	GameState.health = health
 	GameState.armor = armor
 	GameState.emit_player_stats()
+	if health <= 0.0:
+		GameState.mark_mission_failed()
 
 func _toggle_mouse_capture() -> void:
 	if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:

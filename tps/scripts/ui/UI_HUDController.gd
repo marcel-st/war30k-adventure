@@ -5,6 +5,7 @@ extends CanvasLayer
 @onready var wave_label: Label = $Margin/VBox/WaveLabel
 @onready var objective_label: Label = $Margin/VBox/ObjectiveLabel
 @onready var event_label: Label = $Margin/VBox/EventLabel
+@onready var status_label: Label = $Margin/VBox/StatusLabel
 
 func _ready() -> void:
 	GameState.player_stats_changed.connect(_on_player_stats_changed)
@@ -12,6 +13,7 @@ func _ready() -> void:
 	GameState.enemies_remaining_changed.connect(_on_enemies_remaining_changed)
 	GameState.wave_changed.connect(_on_wave_changed)
 	GameState.event_feed_changed.connect(_on_event_feed_changed)
+	GameState.run_state_changed.connect(_on_run_state_changed)
 	_on_player_stats_changed(
 		GameState.health,
 		GameState.armor,
@@ -21,6 +23,7 @@ func _ready() -> void:
 	_on_enemies_remaining_changed(GameState.enemies_remaining)
 	_on_wave_changed(GameState.current_wave, GameState.total_waves)
 	_on_event_feed_changed(GameState.event_feed_text)
+	_on_run_state_changed(GameState.run_state)
 	_on_objective_changed(GameState.objective_text, GameState.objective_completed)
 
 func _on_player_stats_changed(health: float, armor: float, magazine: int, reserve: int) -> void:
@@ -48,3 +51,14 @@ func _on_event_feed_changed(text: String) -> void:
 	if not event_label:
 		return
 	event_label.text = text
+
+func _on_run_state_changed(run_state: String) -> void:
+	if not status_label:
+		return
+	match run_state:
+		"failed":
+			status_label.text = "STATUS: MISSION FAILED - Press R to restart"
+		"victory":
+			status_label.text = "STATUS: OBJECTIVE COMPLETE - Press R to replay"
+		_:
+			status_label.text = "STATUS: ACTIVE"

@@ -85,7 +85,7 @@ func _try_melee_attack() -> void:
 		return
 	attack_timer = attack_cooldown
 	if tracked_player and tracked_player.has_method("apply_damage"):
-		tracked_player.apply_damage(attack_damage)
+		tracked_player.apply_damage(attack_damage, global_position)
 
 func _face_towards(target_position: Vector3, delta: float) -> void:
 	var to_target: Vector3 = target_position - global_position
