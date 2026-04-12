@@ -2,27 +2,35 @@
   "abilities": [
     {
       "ability_id": "resilience_surge",
-      "display_name": "Resilience Surge",
-      "duration": 6.0,
+      "name": "Resilience Surge",
       "cooldown": 20.0,
-      "damage_reduction": 0.28,
-      "speed_multiplier": 1.06
+      "effect": {
+        "type": "damage_reduction",
+        "ratio": 0.28,
+        "hazard_resist_ratio": 0.45,
+        "duration": 6.0
+      }
     },
     {
-      "ability_id": "toxic_blast",
-      "display_name": "Toxic Blast",
-      "duration": 8.0,
+      "ability_id": "toxic_grenade",
+      "name": "Toxic Grenade",
       "cooldown": 16.0,
-      "tick_damage": 4.5,
-      "radius": 4.5
+      "effect": {
+        "type": "aoe_dot",
+        "radius": 4.8,
+        "damage_per_tick": 5.5,
+        "duration": 7.5
+      }
     },
     {
       "ability_id": "rally_command",
-      "display_name": "Rally Command",
-      "duration": 10.0,
+      "name": "Rally Command",
       "cooldown": 24.0,
-      "damage_multiplier": 1.2,
-      "reload_speed_multiplier": 1.22
+      "effect": {
+        "type": "self_buff",
+        "move_speed_bonus": 0.16,
+        "duration": 8.0
+      }
     }
   ]
 }

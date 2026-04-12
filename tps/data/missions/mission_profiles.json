@@ -1,0 +1,46 @@
+{
+  "mission_profiles": [
+    {
+      "mission_id": "vs01",
+      "title": "Vertical Slice: Loyalist Breakout",
+      "wave_intensity_curve": [1.0, 1.2, 1.35, 1.5],
+      "adaptive_rules": {
+        "high_pressure_enemy_threshold": 8,
+        "high_pressure_bonus_reinforcement": {
+          "unit": "ranged",
+          "count": 1,
+          "interval": 0.2
+        },
+        "low_pressure_enemy_threshold": 2,
+        "low_pressure_spawn_interval_scale": 0.88
+      },
+      "optional_objectives": [
+        {
+          "objective_id": "no_deaths_clear",
+          "description": "Complete the run without dying.",
+          "reward_key": "objective_optional"
+        }
+      ],
+      "branch_consequences": {
+        "ops_tone": {
+          "hold_the_line": {
+            "bonus_melee": 2,
+            "event_message": "Macer: Shieldwall pattern. Brace for melee surge."
+          },
+          "secure_relay": {
+            "bonus_ranged": 2,
+            "event_message": "Hest: Relay lanes exposed. Expect heavy ranged fire."
+          },
+          "breach_aggressive": {
+            "bonus_elite": 1,
+            "event_message": "Vox: Aggressive breach detected. Elite support inbound."
+          },
+          "transmit_priority": {
+            "boss_health_multiplier": 1.08,
+            "event_message": "Sigillite relay overloaded. Boss resilience increased."
+          }
+        }
+      }
+    }
+  ]
+}

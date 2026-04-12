@@ -101,6 +101,8 @@ func register_branch_choice(branch_id: String, choice_id: String) -> void:
 		return
 	_branch_state[branch_id] = choice_id
 	emit_signal("branch_choice_applied", branch_id, choice_id)
+	if GameState and GameState.has_method("set_branch_choice"):
+		GameState.set_branch_choice(branch_id, choice_id)
 	GameState.push_event_message("Branch set: %s -> %s" % [branch_id, choice_id])
 
 func get_branch_choice(branch_id: String, fallback: String = "") -> String:

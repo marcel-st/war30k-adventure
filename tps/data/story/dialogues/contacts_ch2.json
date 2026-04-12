@@ -2,7 +2,11 @@
   "contacts": [
     {
       "contact_id": "ch2_contact_hest",
+      "display_name": "Vox-Magos Hest",
       "title": "Vox-Magos Distress",
+      "branch_id": "relay_decision",
+      "branch_choices": ["secure_relay", "purge_saboteurs"],
+      "objective_update": "Decide relay doctrine: secure transmission or purge saboteurs.",
       "lines": [
         {
           "speaker": "Vox-Magos Hest",

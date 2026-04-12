@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/ai/AI_BossHarbinger.gd" id="1_boss"]
 
@@ -27,6 +27,26 @@ roughness = 0.66
 [sub_resource type="SphereShape3D" id="SphereShape3D_awareness"]
 radius = 42.0
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_telegraph_strike"]
+albedo_color = Color(0.95, 0.63, 0.12, 0.38)
+transparency = 1
+shading_mode = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_telegraph_nova"]
+albedo_color = Color(0.49, 0.88, 0.29, 0.32)
+transparency = 1
+shading_mode = 0
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_strike"]
+top_radius = 1.4
+bottom_radius = 1.4
+height = 0.08
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_nova"]
+top_radius = 4.6
+bottom_radius = 4.6
+height = 0.08
+
 [node name="BossHarbingerOfRuin" type="CharacterBody3D"]
 script = ExtResource("1_boss")
 
@@ -52,3 +72,17 @@ collision_mask = 1
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Awareness"]
 shape = SubResource("SphereShape3D_awareness")
+
+[node name="TelegraphRoot" type="Node3D" parent="."]
+
+[node name="StrikeTelegraph" type="MeshInstance3D" parent="TelegraphRoot"]
+mesh = SubResource("CylinderMesh_strike")
+position = Vector3(0, 0.06, 0)
+surface_material_override/0 = SubResource("StandardMaterial3D_telegraph_strike")
+visible = false
+
+[node name="NovaTelegraph" type="MeshInstance3D" parent="TelegraphRoot"]
+mesh = SubResource("CylinderMesh_nova")
+position = Vector3(0, 0.06, 0)
+surface_material_override/0 = SubResource("StandardMaterial3D_telegraph_nova")
+visible = false

@@ -7,6 +7,7 @@ extends CanvasLayer
 @onready var event_label: Label = $Margin/VBox/EventLabel
 @onready var status_label: Label = $Margin/VBox/StatusLabel
 @onready var chapter_label: Label = $Margin/VBox/ChapterLabel
+@onready var progression_label: Label = $Margin/VBox/ProgressionLabel
 
 func _ready() -> void:
 	GameState.player_stats_changed.connect(_on_player_stats_changed)
@@ -16,6 +17,7 @@ func _ready() -> void:
 	GameState.event_feed_changed.connect(_on_event_feed_changed)
 	GameState.mission_state_changed.connect(_on_mission_state_changed)
 	GameState.story_chapter_changed.connect(_on_story_chapter_changed)
+	GameState.progression_changed.connect(_on_progression_changed)
 	_on_player_stats_changed(
 		GameState.health,
 		GameState.armor,
@@ -27,6 +29,7 @@ func _ready() -> void:
 	_on_event_feed_changed(GameState.event_feed_text)
 	_on_mission_state_changed(GameState.mission_state, GameState.mission_state_reason)
 	_on_story_chapter_changed(GameState.story_chapter_id, GameState.story_chapter_title)
+	_on_progression_changed(GameState.player_level, GameState.player_xp, GameState.player_requisition)
 	_on_objective_changed(GameState.objective_text, GameState.objective_completed)
 
 func _on_player_stats_changed(health: float, armor: float, magazine: int, reserve: int) -> void:
@@ -69,3 +72,7 @@ func _on_mission_state_changed(run_state: String, _reason: String) -> void:
 func _on_story_chapter_changed(_chapter_id: String, chapter_title: String) -> void:
 	if chapter_label:
 		chapter_label.text = "Chapter: %s" % chapter_title
+
+func _on_progression_changed(level: int, xp: int, requisition: int) -> void:
+	if progression_label:
+		progression_label.text = "Lvl %d | XP %d | Req %d" % [level, xp, requisition]
