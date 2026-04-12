@@ -13,7 +13,7 @@ func _ready() -> void:
 	GameState.enemies_remaining_changed.connect(_on_enemies_remaining_changed)
 	GameState.wave_changed.connect(_on_wave_changed)
 	GameState.event_feed_changed.connect(_on_event_feed_changed)
-	GameState.run_state_changed.connect(_on_run_state_changed)
+	GameState.mission_state_changed.connect(_on_mission_state_changed)
 	_on_player_stats_changed(
 		GameState.health,
 		GameState.armor,
@@ -23,7 +23,7 @@ func _ready() -> void:
 	_on_enemies_remaining_changed(GameState.enemies_remaining)
 	_on_wave_changed(GameState.current_wave, GameState.total_waves)
 	_on_event_feed_changed(GameState.event_feed_text)
-	_on_run_state_changed(GameState.run_state)
+	_on_mission_state_changed(GameState.mission_state, GameState.mission_state_reason)
 	_on_objective_changed(GameState.objective_text, GameState.objective_completed)
 
 func _on_player_stats_changed(health: float, armor: float, magazine: int, reserve: int) -> void:
@@ -52,7 +52,7 @@ func _on_event_feed_changed(text: String) -> void:
 		return
 	event_label.text = text
 
-func _on_run_state_changed(run_state: String) -> void:
+func _on_mission_state_changed(run_state: String, _reason: String) -> void:
 	if not status_label:
 		return
 	match run_state:

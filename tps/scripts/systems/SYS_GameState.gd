@@ -6,6 +6,7 @@ signal enemies_remaining_changed(remaining: int)
 signal wave_changed(current_wave: int, total_waves: int)
 signal event_feed_changed(text: String)
 signal mission_state_changed(state: String, reason: String)
+signal run_state_changed(state: String)
 
 const MAX_HEALTH := 100.0
 const MAX_ARMOR := 100.0
@@ -46,6 +47,7 @@ func reset_run() -> void:
 	emit_signal("wave_changed", current_wave, total_waves)
 	emit_signal("event_feed_changed", event_feed_text)
 	emit_signal("mission_state_changed", mission_state, mission_state_reason)
+	emit_signal("run_state_changed", mission_state)
 
 func configure_ammo(magazine: int, reserve: int) -> void:
 	ammo_in_magazine = maxi(0, magazine)
@@ -118,6 +120,7 @@ func set_mission_state(state: String, reason: String = "") -> void:
 	mission_state = state
 	mission_state_reason = reason
 	emit_signal("mission_state_changed", mission_state, mission_state_reason)
+	emit_signal("run_state_changed", mission_state)
 
 func emit_player_stats() -> void:
 	emit_signal("player_stats_changed", health, armor, ammo_in_magazine, ammo_reserve)
