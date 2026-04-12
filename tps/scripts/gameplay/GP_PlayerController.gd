@@ -104,7 +104,7 @@ func apply_damage(raw_damage: float) -> void:
 	health = max(0.0, health - (raw_damage - absorbed))
 	_hit_reaction_timer = 0.12
 	_hit_reaction_amount = minf(1.0, _hit_reaction_amount + 0.65)
-	camera_aim.apply_damage_kick(0.035)
+	camera_aim.add_impact_shake(0.8)
 	GameState.health = health
 	GameState.armor = armor
 	GameState.emit_player_stats()

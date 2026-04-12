@@ -89,12 +89,19 @@ func _can_engage_player() -> bool:
 	return is_instance_valid(tracked_player) and not tracked_player.is_queued_for_deletion()
 
 func _try_ranged_attack() -> void:
+	if not _can_engage_player():
+		return
+	if muzzle == null:
+		return
 	if attack_timer > 0.0:
+		return
+	var target_player: CharacterBody3D = tracked_player
+	if target_player == null or not is_instance_valid(target_player):
 		return
 	attack_timer = attack_cooldown
 	var projectile: Node3D = PROJECTILE_SCENE.instantiate()
 	projectile.global_position = muzzle.global_position
-	projectile.look_at(tracked_player.global_position + Vector3.UP * 0.8, Vector3.UP)
+	projectile.look_at(target_player.global_position + Vector3.UP * 0.8, Vector3.UP)
 	projectile.set("speed", projectile_speed)
 	projectile.set("damage", attack_damage)
 	projectile.set("shooter", self)
