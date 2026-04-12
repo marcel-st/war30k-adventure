@@ -13,11 +13,14 @@ extends CharacterBody3D
 
 @onready var camera_aim: Node3D = $CameraRig
 @onready var boltgun: Node3D = $WeaponSocket/Boltgun
+@onready var visual_root: Node3D = $VisualRoot
 
 var gravity: float = 24.0
 var health: float = 100.0
 var armor: float = 100.0
 var current_combat_move_speed_multiplier: float = 1.0
+var _hit_reaction_timer: float = 0.0
+var _hit_reaction_amount: float = 0.0
 
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -39,6 +42,7 @@ func _physics_process(delta: float) -> void:
 	_process_movement(delta)
 	_process_aim_rotation(delta)
 	_process_combat()
+	_update_hit_reaction_visual(delta)
 	move_and_slide()
 
 func _apply_gravity(delta: float) -> void:
@@ -98,6 +102,9 @@ func apply_damage(raw_damage: float) -> void:
 	var absorbed: float = min(armor, raw_damage * 0.65)
 	armor -= absorbed
 	health = max(0.0, health - (raw_damage - absorbed))
+	_hit_reaction_timer = 0.12
+	_hit_reaction_amount = minf(1.0, _hit_reaction_amount + 0.65)
+	camera_aim.apply_damage_kick(0.035)
 	GameState.health = health
 	GameState.armor = armor
 	GameState.emit_player_stats()
@@ -107,3 +114,14 @@ func _toggle_mouse_capture() -> void:
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	else:
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+
+func _update_hit_reaction_visual(delta: float) -> void:
+	if _hit_reaction_timer <= 0.0 and _hit_reaction_amount <= 0.001:
+		if visual_root and visual_root.scale != Vector3.ONE:
+			visual_root.scale = visual_root.scale.lerp(Vector3.ONE, clampf(delta * 14.0, 0.0, 1.0))
+		return
+	_hit_reaction_timer = maxf(0.0, _hit_reaction_timer - delta)
+	_hit_reaction_amount = maxf(0.0, _hit_reaction_amount - delta * 2.0)
+	var pulse: float = 1.0 - (0.07 * _hit_reaction_amount)
+	if visual_root:
+		visual_root.scale = visual_root.scale.lerp(Vector3(pulse, pulse, pulse), clampf(delta * 22.0, 0.0, 1.0))

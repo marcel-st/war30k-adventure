@@ -20,6 +20,8 @@ var health: float = 70.0
 var is_dead: bool = false
 var attack_timer: float = 0.0
 var tracked_player: CharacterBody3D = null
+var _hit_flash_timer: float = 0.0
+var _base_scale: Vector3 = Vector3.ONE
 
 func _ready() -> void:
 	gravity = ProjectSettings.get_setting("physics/3d/default_gravity", 24.0) * gravity_scale
@@ -30,12 +32,15 @@ func _ready() -> void:
 			(awareness_shape.shape as SphereShape3D).radius = detection_radius
 		awareness_area.body_entered.connect(_on_awareness_body_entered)
 		awareness_area.body_exited.connect(_on_awareness_body_exited)
+	if visual_root:
+		_base_scale = visual_root.scale
 
 func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
 
 	attack_timer = maxf(0.0, attack_timer - delta)
+	_update_hit_feedback(delta)
 	_apply_gravity(delta)
 
 	var desired_velocity: Vector3 = Vector3.ZERO
@@ -60,6 +65,7 @@ func apply_damage(raw_damage: float) -> void:
 	if is_dead or raw_damage <= 0.0:
 		return
 	health = maxf(0.0, health - raw_damage)
+	_trigger_hit_flash()
 	if health <= 0.0:
 		_die()
 
@@ -103,6 +109,19 @@ func _die() -> void:
 	emit_signal("died", self)
 	var timer: SceneTreeTimer = get_tree().create_timer(corpse_lifetime)
 	timer.timeout.connect(queue_free)
+
+func _trigger_hit_flash() -> void:
+	_hit_flash_timer = 0.12
+	if visual_root:
+		visual_root.scale = _base_scale * Vector3(1.12, 0.92, 1.12)
+
+func _update_hit_feedback(delta: float) -> void:
+	if _hit_flash_timer <= 0.0:
+		return
+	_hit_flash_timer = maxf(0.0, _hit_flash_timer - delta)
+	if visual_root:
+		var blend: float = clampf(_hit_flash_timer / 0.12, 0.0, 1.0)
+		visual_root.scale = _base_scale.lerp(_base_scale * Vector3(1.12, 0.92, 1.12), blend)
 
 func _on_awareness_body_entered(body: Node) -> void:
 	if body.is_in_group("player"):

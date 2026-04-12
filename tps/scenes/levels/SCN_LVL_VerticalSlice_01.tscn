@@ -1,9 +1,10 @@
-[gd_scene load_steps=15 format=3 uid="uid://j3o3so2i0w6w"]
+[gd_scene load_steps=16 format=3 uid="uid://j3o3so2i0w6w"]
 
 [ext_resource type="Script" path="res://scripts/mission/MIS_VS01_Controller.gd" id="1_0y8yb"]
 [ext_resource type="PackedScene" path="res://scenes/player/SCN_PlayerMarine.tscn" id="2_hf5yn"]
 [ext_resource type="PackedScene" path="res://scenes/ui/SCN_UI_HUD.tscn" id="3_tr4q6"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/SCN_EnemyTraitorMarine.tscn" id="4_ej01b"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/SCN_EnemyCultistRanged.tscn" id="5_7d2wc"]
 
 [sub_resource type="Environment" id="Environment_hg35v"]
 background_mode = 2
@@ -161,5 +162,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 groups = ["player"]
 
 [node name="Enemies" type="Node3D" parent="."]
+
+[node name="ProjectileContainer" type="Node3D" parent="."]
 
 [node name="HUD" parent="." instance=ExtResource("3_tr4q6")]

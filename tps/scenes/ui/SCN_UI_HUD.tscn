@@ -37,6 +37,10 @@ theme_override_font_sizes/font_size = 20
 text = "Enemies: 0"
 theme_override_font_sizes/font_size = 20
 
+[node name="WaveLabel" type="Label" parent="Margin/VBox"]
+text = "Wave: 0/0"
+theme_override_font_sizes/font_size = 20
+
 [node name="Crosshair" type="Label" parent="."]
 anchors_preset = 8
 anchor_left = 0.5

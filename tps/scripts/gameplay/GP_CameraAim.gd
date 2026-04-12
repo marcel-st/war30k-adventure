@@ -16,6 +16,8 @@ extends Node3D
 
 var _pitch_radians := 0.0
 var _is_aiming: bool = false
+var _impact_shake_timer: float = 0.0
+var _impact_shake_strength: float = 0.0
 
 func _ready() -> void:
 	_pitch_radians = _pitch.rotation.x
@@ -43,6 +45,7 @@ func _process(delta: float) -> void:
 	var target_fov := aim_fov if aiming else default_fov
 	_spring_arm.spring_length = lerp(_spring_arm.spring_length, target_length, delta * transition_speed)
 	_camera.fov = lerp(_camera.fov, target_fov, delta * transition_speed)
+	_update_impact_shake(delta)
 
 func set_aiming(is_aiming: bool) -> void:
 	_is_aiming = is_aiming
@@ -74,3 +77,18 @@ func get_aim_direction() -> Vector3:
 
 func get_camera() -> Camera3D:
 	return _camera
+
+func add_impact_shake(intensity: float = 1.0) -> void:
+	_impact_shake_timer = 0.12
+	_impact_shake_strength = maxf(_impact_shake_strength, intensity)
+
+func _update_impact_shake(delta: float) -> void:
+	if _impact_shake_timer <= 0.0:
+		return
+	_impact_shake_timer = maxf(0.0, _impact_shake_timer - delta)
+	var t: float = _impact_shake_timer / 0.12
+	var amplitude: float = deg_to_rad(0.6) * _impact_shake_strength * t
+	_pitch.rotation.z = sin(Time.get_ticks_msec() * 0.04) * amplitude
+	if _impact_shake_timer <= 0.0:
+		_pitch.rotation.z = 0.0
+		_impact_shake_strength = 0.0
