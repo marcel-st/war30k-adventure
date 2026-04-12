@@ -1,7 +1,6 @@
 extends Node3D
 
 @onready var extraction_zone: Area3D = $ExtractionZone
-@onready var wave_spawn_points: Node3D = $WaveSpawnPoints
 @onready var enemy_container: Node3D = $Enemies
 
 const TRAITOR_SCENE: PackedScene = preload("res://scenes/enemies/SCN_EnemyTraitorMarine.tscn")
@@ -46,17 +45,18 @@ func _start_next_wave() -> void:
 	for i in range(enemies_to_spawn):
 		var spawn_position: Vector3 = _pick_spawn_position(i)
 		var enemy: Node3D = TRAITOR_SCENE.instantiate()
-		enemy.global_position = spawn_position
 		enemy.tree_exited.connect(_on_enemy_tree_exited.bind(enemy))
 		enemy_container.add_child(enemy)
+		enemy.global_position = spawn_position
 		_active_enemies.append(enemy)
 	_wave_index += 1
 
 func _pick_spawn_position(index: int) -> Vector3:
-	if wave_spawn_points.get_child_count() == 0:
+	var marker_nodes: Array[Node] = get_tree().get_nodes_in_group("enemy_spawn")
+	if marker_nodes.is_empty():
 		return Vector3(0.0, 1.1, -10.0 - float(index) * 2.5)
-	var marker_index: int = index % wave_spawn_points.get_child_count()
-	var marker: Node3D = wave_spawn_points.get_child(marker_index) as Node3D
+	var marker_index: int = index % marker_nodes.size()
+	var marker: Node3D = marker_nodes[marker_index] as Node3D
 	if marker:
 		return marker.global_position
 	return Vector3(0.0, 1.1, -10.0 - float(index) * 2.5)

@@ -1,7 +1,7 @@
 extends CanvasLayer
 
 @onready var stats_label: Label = $Margin/VBox/TopRow/StatsLabel
-@onready var enemy_count_label: Label = $Margin/VBox/EnemyCountLabel
+@onready var enemy_count_label: Label = $Margin/VBox/EnemiesLabel
 @onready var objective_label: Label = $Margin/VBox/ObjectiveLabel
 
 func _ready() -> void:
@@ -18,11 +18,14 @@ func _ready() -> void:
 	_on_objective_changed(GameState.objective_text, GameState.objective_completed)
 
 func _on_player_stats_changed(health: float, armor: float, magazine: int, reserve: int) -> void:
-	stats_label.text = "HP %d | AR %d | MAG %d/%d" % [int(round(health)), int(round(armor)), magazine, reserve]
+	if stats_label:
+		stats_label.text = "HP %d | AR %d | MAG %d/%d" % [int(round(health)), int(round(armor)), magazine, reserve]
 
 func _on_objective_changed(text: String, completed: bool) -> void:
 	var prefix := "[DONE] " if completed else "[OBJ] "
-	objective_label.text = "%s%s" % [prefix, text]
+	if objective_label:
+		objective_label.text = "%s%s" % [prefix, text]
 
 func _on_enemies_remaining_changed(remaining: int) -> void:
-	enemy_count_label.text = "Traitors remaining: %d" % remaining
+	if enemy_count_label:
+		enemy_count_label.text = "Traitors remaining: %d" % remaining
