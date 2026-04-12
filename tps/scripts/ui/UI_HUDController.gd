@@ -4,12 +4,14 @@ extends CanvasLayer
 @onready var enemy_count_label: Label = $Margin/VBox/EnemiesLabel
 @onready var wave_label: Label = $Margin/VBox/WaveLabel
 @onready var objective_label: Label = $Margin/VBox/ObjectiveLabel
+@onready var event_label: Label = $Margin/VBox/EventLabel
 
 func _ready() -> void:
 	GameState.player_stats_changed.connect(_on_player_stats_changed)
 	GameState.objective_changed.connect(_on_objective_changed)
 	GameState.enemies_remaining_changed.connect(_on_enemies_remaining_changed)
 	GameState.wave_changed.connect(_on_wave_changed)
+	GameState.event_feed_changed.connect(_on_event_feed_changed)
 	_on_player_stats_changed(
 		GameState.health,
 		GameState.armor,
@@ -18,6 +20,7 @@ func _ready() -> void:
 	)
 	_on_enemies_remaining_changed(GameState.enemies_remaining)
 	_on_wave_changed(GameState.current_wave, GameState.total_waves)
+	_on_event_feed_changed(GameState.event_feed_text)
 	_on_objective_changed(GameState.objective_text, GameState.objective_completed)
 
 func _on_player_stats_changed(health: float, armor: float, magazine: int, reserve: int) -> void:
@@ -40,3 +43,8 @@ func _on_wave_changed(current_wave: int, total_waves: int) -> void:
 		wave_label.text = "Wave: --"
 	else:
 		wave_label.text = "Wave: %d/%d" % [current_wave, total_waves]
+
+func _on_event_feed_changed(text: String) -> void:
+	if not event_label:
+		return
+	event_label.text = text

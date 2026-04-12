@@ -1,0 +1,77 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://scripts/ai/AI_EnemyNurgleChampion.gd" id="1_ai"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_champion"]
+radius = 0.55
+height = 1.4
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_body"]
+radius = 0.55
+height = 1.5
+
+[sub_resource type="SphereMesh" id="SphereMesh_head"]
+radius = 0.3
+height = 0.6
+
+[sub_resource type="BoxMesh" id="BoxMesh_pauldron"]
+size = Vector3(1.15, 0.3, 0.9)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_body"]
+albedo_color = Color(0.34, 0.43, 0.26, 1)
+metallic = 0.25
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_trim"]
+albedo_color = Color(0.42, 0.33, 0.2, 1)
+metallic = 0.34
+roughness = 0.7
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_awareness"]
+radius = 30.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_crush"]
+radius = 3.0
+
+[node name="EnemyNurgleChampion" type="CharacterBody3D"]
+script = ExtResource("1_ai")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CapsuleShape3D_champion")
+position = Vector3(0, 1.1, 0)
+
+[node name="VisualRoot" type="Node3D" parent="."]
+
+[node name="BodyMesh" type="MeshInstance3D" parent="VisualRoot"]
+mesh = SubResource("CapsuleMesh_body")
+position = Vector3(0, 1.1, 0)
+surface_material_override/0 = SubResource("StandardMaterial3D_body")
+
+[node name="HeadMesh" type="MeshInstance3D" parent="VisualRoot"]
+mesh = SubResource("SphereMesh_head")
+position = Vector3(0, 1.95, 0)
+surface_material_override/0 = SubResource("StandardMaterial3D_trim")
+
+[node name="PauldronLeft" type="MeshInstance3D" parent="VisualRoot"]
+mesh = SubResource("BoxMesh_pauldron")
+position = Vector3(-0.62, 1.7, 0)
+surface_material_override/0 = SubResource("StandardMaterial3D_trim")
+
+[node name="PauldronRight" type="MeshInstance3D" parent="VisualRoot"]
+mesh = SubResource("BoxMesh_pauldron")
+position = Vector3(0.62, 1.7, 0)
+surface_material_override/0 = SubResource("StandardMaterial3D_trim")
+
+[node name="Awareness" type="Area3D" parent="."]
+collision_layer = 0
+collision_mask = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Awareness"]
+shape = SubResource("SphereShape3D_awareness")
+
+[node name="CrushArea" type="Area3D" parent="."]
+collision_layer = 0
+collision_mask = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CrushArea"]
+shape = SubResource("SphereShape3D_crush")
