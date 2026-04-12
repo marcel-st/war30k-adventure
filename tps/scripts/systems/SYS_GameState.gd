@@ -2,6 +2,8 @@ extends Node
 
 signal player_stats_changed(health: float, armor: float, magazine: int, reserve: int)
 signal objective_changed(text: String, completed: bool)
+signal enemies_remaining_changed(remaining: int)
+signal wave_changed(current_wave: int, total_waves: int)
 
 const MAX_HEALTH := 100.0
 const MAX_ARMOR := 100.0
@@ -12,6 +14,9 @@ var ammo_in_magazine: int = 30
 var ammo_reserve: int = 120
 var objective_text: String = "Reach extraction."
 var objective_completed: bool = false
+var enemies_remaining: int = 0
+var current_wave: int = 0
+var total_waves: int = 0
 
 func _ready() -> void:
 	_setup_default_input_actions()
@@ -22,8 +27,13 @@ func reset_run() -> void:
 	armor = MAX_ARMOR
 	objective_completed = false
 	objective_text = "Push through traitor lines and reach extraction."
+	enemies_remaining = 0
+	current_wave = 0
+	total_waves = 0
 	emit_player_stats()
 	emit_signal("objective_changed", objective_text, objective_completed)
+	emit_signal("enemies_remaining_changed", enemies_remaining)
+	emit_signal("wave_changed", current_wave, total_waves)
 
 func configure_ammo(magazine: int, reserve: int) -> void:
 	ammo_in_magazine = maxi(0, magazine)
@@ -72,6 +82,15 @@ func complete_objective(text: String) -> void:
 	objective_text = text
 	objective_completed = true
 	emit_signal("objective_changed", objective_text, objective_completed)
+
+func set_enemies_remaining(remaining: int) -> void:
+	enemies_remaining = maxi(0, remaining)
+	emit_signal("enemies_remaining_changed", enemies_remaining)
+
+func set_wave_progress(current: int, total: int) -> void:
+	current_wave = maxi(0, current)
+	total_waves = maxi(0, total)
+	emit_signal("wave_changed", current_wave, total_waves)
 
 func emit_player_stats() -> void:
 	emit_signal("player_stats_changed", health, armor, ammo_in_magazine, ammo_reserve)

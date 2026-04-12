@@ -1,8 +1,9 @@
 extends CharacterBody3D
 
-@export var walk_speed: float = 5.2
-@export var sprint_speed: float = 7.8
-@export var acceleration: float = 18.0
+@export var walk_speed: float = 4.6
+@export var sprint_speed: float = 6.2
+@export var acceleration: float = 11.0
+@export var deceleration: float = 14.0
 @export var rotation_speed: float = 14.0
 @export var gravity_scale: float = 1.0
 @export var mouse_sensitivity: float = 0.0019
@@ -16,6 +17,7 @@ extends CharacterBody3D
 var gravity: float = 24.0
 var health: float = 100.0
 var armor: float = 100.0
+var current_combat_move_speed_multiplier: float = 1.0
 
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -52,26 +54,28 @@ func _process_movement(delta: float) -> void:
 	move_dir.y = 0.0
 	move_dir = move_dir.normalized()
 
-	var target_speed := walk_speed
+	var target_speed: float = walk_speed
 	if Input.is_action_pressed("sprint"):
 		target_speed = sprint_speed
+	target_speed *= current_combat_move_speed_multiplier
 
 	var target_velocity: Vector3 = move_dir * target_speed
-	var horiz_velocity := Vector3(velocity.x, 0.0, velocity.z)
-	horiz_velocity = horiz_velocity.lerp(target_velocity, clamp(acceleration * delta, 0.0, 1.0))
+	var horiz_velocity: Vector3 = Vector3(velocity.x, 0.0, velocity.z)
+	var lerp_factor: float = clamp((acceleration if target_velocity.length_squared() > 0.01 else deceleration) * delta, 0.0, 1.0)
+	horiz_velocity = horiz_velocity.lerp(target_velocity, lerp_factor)
 	velocity.x = horiz_velocity.x
 	velocity.z = horiz_velocity.z
 
 func _process_aim_rotation(delta: float) -> void:
-	var look_input := Vector2.ZERO
+	var look_input: Vector2 = Vector2.ZERO
 	look_input.x = Input.get_action_strength("look_right") - Input.get_action_strength("look_left")
 	look_input.y = Input.get_action_strength("look_down") - Input.get_action_strength("look_up")
 	if look_input.length_squared() > 0.0001:
 		camera_aim.apply_stick_input(look_input * joy_look_sensitivity * delta)
 
-	var move_vector := Vector3(velocity.x, 0.0, velocity.z)
+	var move_vector: Vector3 = Vector3(velocity.x, 0.0, velocity.z)
 	if move_vector.length_squared() > 0.01:
-		var target_yaw := atan2(move_vector.x, move_vector.z)
+		var target_yaw: float = atan2(move_vector.x, move_vector.z)
 		rotation.y = lerp_angle(rotation.y, target_yaw, clamp(rotation_speed * delta, 0.0, 1.0))
 
 func _process_combat() -> void:
@@ -85,6 +89,8 @@ func _process_combat() -> void:
 
 	if Input.is_action_just_pressed("reload"):
 		boltgun.start_reload()
+
+	current_combat_move_speed_multiplier = boltgun.get_move_speed_multiplier()
 
 func apply_damage(raw_damage: float) -> void:
 	if raw_damage <= 0.0 or health <= 0.0:

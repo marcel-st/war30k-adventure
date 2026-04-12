@@ -33,6 +33,10 @@ size_flags_horizontal = 3
 text = "[OBJ] Push through traitor lines and reach extraction."
 theme_override_font_sizes/font_size = 20
 
+[node name="EnemiesLabel" type="Label" parent="Margin/VBox"]
+text = "Enemies: 0"
+theme_override_font_sizes/font_size = 20
+
 [node name="Crosshair" type="Label" parent="."]
 anchors_preset = 8
 anchor_left = 0.5
