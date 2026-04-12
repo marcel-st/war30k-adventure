@@ -1,0 +1,24 @@
+{
+  "scenarios": [
+    {
+      "id": "qa_smoke_boot",
+      "description": "Boot level and survive for 20 seconds.",
+      "type": "smoke"
+    },
+    {
+      "id": "qa_story_contacts",
+      "description": "Trigger chapter intro and one NPC contact.",
+      "type": "narrative"
+    },
+    {
+      "id": "qa_ability_cycle",
+      "description": "Use all abilities once and confirm cooldown behavior.",
+      "type": "gameplay"
+    },
+    {
+      "id": "qa_boss_spawn",
+      "description": "Spawn chapter boss and defeat encounter.",
+      "type": "combat"
+    }
+  ]
+}

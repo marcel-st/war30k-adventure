@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3 uid="uid://j3o3so2i0w6w"]
+[gd_scene load_steps=20 format=3 uid="uid://j3o3so2i0w6w"]
 
 [ext_resource type="Script" path="res://scripts/mission/MIS_VS01_Controller.gd" id="1_0y8yb"]
 [ext_resource type="PackedScene" path="res://scenes/player/SCN_PlayerMarine.tscn" id="2_hf5yn"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/SCN_EnemyNurgleChampion.tscn" id="6_9k2yp"]
 [ext_resource type="PackedScene" path="res://scenes/story/SCN_StorySystems.tscn" id="7_1j2bq"]
 [ext_resource type="PackedScene" path="res://scenes/npc/SCN_NPC_ContactActor.tscn" id="8_6l3za"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/SCN_Boss_HarbingerOfRuin.tscn" id="9_boss"]
 
 [sub_resource type="Environment" id="Environment_hg35v"]
 background_mode = 2
@@ -173,6 +174,8 @@ groups = ["player"]
 [node name="Enemies" type="Node3D" parent="."]
 
 [node name="ProjectileContainer" type="Node3D" parent="."]
+
+[node name="BossContainer" type="Node3D" parent="."]
 
 [node name="StorySystems" parent="." instance=ExtResource("7_1j2bq")]
 

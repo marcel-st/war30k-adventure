@@ -19,6 +19,9 @@ func bootstrap_story() -> void:
 	if story_manager and story_manager.has_signal("subtitle_changed"):
 		if not story_manager.subtitle_changed.is_connected(_on_story_subtitle_changed):
 			story_manager.subtitle_changed.connect(_on_story_subtitle_changed)
+	if story_manager and story_manager.has_signal("branch_choice_required"):
+		if not story_manager.branch_choice_required.is_connected(_on_branch_choice_required):
+			story_manager.branch_choice_required.connect(_on_branch_choice_required)
 
 func play_chapter_intro(chapter_ref: Variant) -> void:
 	var chapter_id: String = _chapter_id_from_ref(chapter_ref)
@@ -51,3 +54,8 @@ func _on_story_subtitle_changed(speaker: String, text: String) -> void:
 	if text == "":
 		return
 	GameState.push_event_message("%s: %s" % [speaker, text])
+
+func _on_branch_choice_required(branch_id: String, options: Array[String]) -> void:
+	if options.is_empty():
+		return
+	GameState.push_event_message("Branch %s selected: %s" % [branch_id, options[0]])

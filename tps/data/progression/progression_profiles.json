@@ -1,0 +1,30 @@
+{
+  "starting_points": 0,
+  "point_gains": {
+    "enemy_kill": 1,
+    "wave_clear": 5,
+    "mission_victory": 20,
+    "optional_objective": 8,
+    "boss_kill": 25
+  },
+  "perk_tiers": [
+    {
+      "tier_id": "tier_1",
+      "required_points": 15,
+      "perk_id": "steady_hands",
+      "description": "Reduce weapon spread bloom growth by 12%."
+    },
+    {
+      "tier_id": "tier_2",
+      "required_points": 35,
+      "perk_id": "stubborn_plate",
+      "description": "Increase effective armor absorption by 10%."
+    },
+    {
+      "tier_id": "tier_3",
+      "required_points": 60,
+      "perk_id": "unbroken_will",
+      "description": "Shorten ability cooldowns by 8%."
+    }
+  ]
+}

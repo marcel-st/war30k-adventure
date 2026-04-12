@@ -1,0 +1,18 @@
+{
+  "weapons": {
+    "boltgun_mk1": {
+      "display_name": "Phobos Boltgun",
+      "fire_rate": 6.3,
+      "damage": 24.0,
+      "range": 180.0,
+      "magazine_size": 30,
+      "reload_duration": 2.1,
+      "hip_spread_deg": 1.7,
+      "ads_spread_deg": 0.85,
+      "recoil_pitch_kick": 0.018,
+      "recoil_yaw_kick": 0.006,
+      "tracer_lifetime": 0.08,
+      "impact_event_tag": "bolter_impact"
+    }
+  }
+}

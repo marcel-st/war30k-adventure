@@ -11,6 +11,7 @@ signal died(enemy: Node3D)
 @export var attack_damage: float = 9.0
 @export var attack_cooldown: float = 1.2
 @export var corpse_lifetime: float = 2.6
+@export var ai_role: String = "rusher"
 
 @onready var visual_root: Node3D = get_node_or_null("VisualRoot") as Node3D
 @onready var awareness_area: Area3D = get_node_or_null("Awareness") as Area3D
@@ -22,6 +23,7 @@ var attack_timer: float = 0.0
 var tracked_player: CharacterBody3D = null
 var _hit_flash_timer: float = 0.0
 var _base_scale: Vector3 = Vector3.ONE
+var _commander_bonus_scale: float = 1.0
 
 func _ready() -> void:
 	gravity = ProjectSettings.get_setting("physics/3d/default_gravity", 24.0) * gravity_scale
@@ -40,6 +42,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	attack_timer = maxf(0.0, attack_timer - delta)
+	_update_commander_bonus()
 	_update_hit_feedback(delta)
 	_apply_gravity(delta)
 
@@ -50,7 +53,12 @@ func _physics_process(delta: float) -> void:
 		var distance_to_player: float = to_player.length()
 		if distance_to_player > attack_radius:
 			var dir: Vector3 = to_player.normalized()
-			desired_velocity = dir * move_speed
+			var role_speed_scale: float = 1.0
+			if ai_role == "flanker":
+				role_speed_scale = 1.12
+			elif ai_role == "suppressor":
+				role_speed_scale = 0.9
+			desired_velocity = dir * move_speed * role_speed_scale * _commander_bonus_scale
 			_face_towards(global_position + dir, delta)
 		else:
 			_try_melee_attack()
@@ -83,9 +91,12 @@ func _can_engage_player() -> bool:
 func _try_melee_attack() -> void:
 	if attack_timer > 0.0:
 		return
-	attack_timer = attack_cooldown
+	attack_timer = attack_cooldown / maxf(0.4, _commander_bonus_scale)
 	if tracked_player and tracked_player.has_method("apply_damage"):
-		tracked_player.apply_damage(attack_damage, global_position)
+		tracked_player.apply_damage(attack_damage * _commander_bonus_scale, global_position)
+
+func set_commander_aura_bonus(multiplier: float) -> void:
+	_commander_bonus_scale = clampf(multiplier, 0.5, 2.0)
 
 func _face_towards(target_position: Vector3, delta: float) -> void:
 	var to_target: Vector3 = target_position - global_position
@@ -130,3 +141,19 @@ func _on_awareness_body_entered(body: Node) -> void:
 func _on_awareness_body_exited(body: Node) -> void:
 	if body == tracked_player:
 		tracked_player = null
+
+func _update_commander_bonus() -> void:
+	if _commander_bonus_scale > 1.0:
+		_commander_bonus_scale = maxf(1.0, _commander_bonus_scale - 0.02)
+	else:
+		_commander_bonus_scale = 1.0
+	var commanders: Array[Node] = get_tree().get_nodes_in_group("traitor_commander")
+	for commander in commanders:
+		if not (commander is Node3D):
+			continue
+		var commander_node: Node3D = commander as Node3D
+		if not is_instance_valid(commander_node):
+			continue
+		if commander_node.global_position.distance_to(global_position) <= 14.0:
+			_commander_bonus_scale = 1.18
+			return

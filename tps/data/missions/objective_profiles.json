@@ -1,0 +1,29 @@
+{
+  "objective_profiles": [
+    {
+      "objective_id": "obj_wave_clear",
+      "type": "wave_clear",
+      "title": "Clear Hostiles",
+      "description": "Eliminate all traitors in the combat lane."
+    },
+    {
+      "objective_id": "obj_hold_relay",
+      "type": "hold_zone",
+      "title": "Hold Relay",
+      "description": "Remain inside relay radius until lock completes.",
+      "duration_seconds": 12.0
+    },
+    {
+      "objective_id": "obj_sabotage_node",
+      "type": "sabotage",
+      "title": "Sabotage Node",
+      "description": "Interact at sabotage marker to disrupt traitor comms."
+    },
+    {
+      "objective_id": "obj_extract",
+      "type": "extract",
+      "title": "Extract",
+      "description": "Reach the extraction zone alive."
+    }
+  ]
+}

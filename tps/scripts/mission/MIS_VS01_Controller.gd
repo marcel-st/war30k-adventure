@@ -9,6 +9,7 @@ extends Node3D
 const TRAITOR_SCENE: PackedScene = preload("res://scenes/enemies/SCN_EnemyTraitorMarine.tscn")
 const CULTIST_SCENE: PackedScene = preload("res://scenes/enemies/SCN_EnemyCultistRanged.tscn")
 const CHAMPION_SCENE: PackedScene = preload("res://scenes/enemies/SCN_EnemyNurgleChampion.tscn")
+const BOSS_SCENE: PackedScene = preload("res://scenes/enemies/SCN_Boss_HarbingerOfRuin.tscn")
 
 var _wave_index: int = 0
 var _waves: Array[Dictionary] = [
@@ -45,6 +46,10 @@ var _chapter_triggered: Dictionary = {}
 var _current_chapter_number: int = 1
 var _spawn_markers: Array[Marker3D] = []
 var _enemy_compact_timer: float = 0.0
+var _boss_spawned: bool = false
+var _active_mission_profile: Dictionary = {}
+var _bonus_objective_active: bool = false
+var _bonus_objective_completed: bool = false
 
 const ENEMY_COMPACT_INTERVAL: float = 0.5
 
@@ -65,6 +70,7 @@ func _ready() -> void:
 	if story_systems and story_systems.has_method("request_contact"):
 		story_systems.request_contact("ch1_contact_ignatius")
 	_chapter_triggered[1] = true
+	_setup_mission_profile()
 	extraction_zone.monitoring = false
 	_start_next_wave()
 
@@ -86,6 +92,7 @@ func _physics_process(_delta: float) -> void:
 
 func _on_extraction_body_entered(body: Node) -> void:
 	if body.is_in_group("player"):
+		_finish_optional_objectives()
 		if story_systems and story_systems.has_method("play_chapter_intro"):
 			if _current_chapter_number < 4:
 				_current_chapter_number = 4
@@ -104,6 +111,9 @@ func _refresh_player_group_tag() -> void:
 
 func _start_next_wave() -> void:
 	if _wave_index >= _waves.size():
+		if not _boss_spawned:
+			_spawn_boss_encounter()
+			return
 		_combat_completed = true
 		GameState.set_enemies_remaining(0)
 		GameState.set_objective("Combat lane secured. Move to extraction zone.")
@@ -158,6 +168,8 @@ func _spawn_wave_units(melee_count: int, ranged_count: int, elite_count: int, in
 func _spawn_unit(spawn_scene: PackedScene, spawn_position: Vector3) -> void:
 	var enemy: Node3D = spawn_scene.instantiate()
 	enemy.tree_exited.connect(_on_enemy_tree_exited.bind(enemy))
+	if enemy.has_method("set_target_player"):
+		enemy.set_target_player(get_node_or_null("Player"))
 	enemy_container.add_child(enemy)
 	enemy.global_position = spawn_position
 	_active_enemies.append(enemy)
@@ -241,6 +253,13 @@ func _cache_spawn_markers() -> void:
 		if marker_node is Marker3D:
 			_spawn_markers.append(marker_node as Marker3D)
 
+func _spawn_boss_encounter() -> void:
+	_boss_spawned = true
+	GameState.push_event_message("Boss contact: Harbinger of Ruin enters the field.")
+	GameState.set_objective("Defeat the Harbinger and secure extraction.")
+	var spawn_position: Vector3 = _pick_spawn_position(999)
+	_spawn_unit(BOSS_SCENE, spawn_position + Vector3(0.0, 0.0, -3.0))
+
 func _on_enemy_tree_exited(enemy: Node3D) -> void:
 	_active_enemies.erase(enemy)
 	GameState.set_enemies_remaining(_active_enemies.size())
@@ -279,3 +298,27 @@ func _on_restart_requested() -> void:
 func _on_story_contact_requested(contact_id: String) -> void:
 	if story_systems and story_systems.has_method("request_contact"):
 		story_systems.request_contact(contact_id)
+
+func _setup_mission_profile() -> void:
+	if not GameState.has_method("get_mission_profile"):
+		return
+	var profile: Dictionary = GameState.get_mission_profile("vs01")
+	if profile.is_empty():
+		return
+	_active_mission_profile = profile
+	var optional_variant: Variant = profile.get("optional_objectives", [])
+	if optional_variant is Array and not (optional_variant as Array).is_empty():
+		_bonus_objective_active = true
+		_bonus_objective_completed = false
+		GameState.push_event_message("Optional objective active: complete run with no deaths.")
+
+func _finish_optional_objectives() -> void:
+	if not _bonus_objective_active or _bonus_objective_completed:
+		return
+	if GameState.mission_state == "failed":
+		GameState.push_event_message("Optional objective failed.")
+		return
+	_bonus_objective_completed = true
+	if GameState.has_method("grant_progression_reward"):
+		GameState.grant_progression_reward("objective_optional")
+	GameState.push_event_message("Optional objective complete: bonus requisition awarded.")

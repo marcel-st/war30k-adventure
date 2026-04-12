@@ -16,6 +16,7 @@ signal died(enemy: Node3D)
 @onready var visual_root: Node3D = $VisualRoot
 @onready var awareness_area: Area3D = $Awareness
 @onready var body_mesh: MeshInstance3D = $VisualRoot/BodyMesh
+@onready var command_aura: Area3D = get_node_or_null("CommandAura") as Area3D
 
 var gravity: float = 24.0
 var health: float = 140.0
@@ -23,6 +24,7 @@ var is_dead: bool = false
 var attack_timer: float = 0.0
 var tracked_player: CharacterBody3D = null
 var _hit_flash_timer: float = 0.0
+var _is_commander_active: bool = false
 
 func _ready() -> void:
 	gravity = ProjectSettings.get_setting("physics/3d/default_gravity", 24.0) * gravity_scale
@@ -32,6 +34,10 @@ func _ready() -> void:
 		(awareness_shape.shape as SphereShape3D).radius = detection_radius
 	awareness_area.body_entered.connect(_on_awareness_body_entered)
 	awareness_area.body_exited.connect(_on_awareness_body_exited)
+	if command_aura:
+		command_aura.body_entered.connect(_on_command_aura_body_entered)
+		command_aura.body_exited.connect(_on_command_aura_body_exited)
+	add_to_group("traitor_commander")
 
 func _physics_process(delta: float) -> void:
 	if is_dead:
@@ -101,6 +107,8 @@ func _die() -> void:
 	collision_layer = 0
 	collision_mask = 0
 	awareness_area.monitoring = false
+	if command_aura:
+		command_aura.monitoring = false
 	if visual_root:
 		visual_root.scale = Vector3(1.15, 0.22, 1.15)
 	emit_signal("died", self)
@@ -126,3 +134,16 @@ func _on_awareness_body_entered(body: Node) -> void:
 func _on_awareness_body_exited(body: Node) -> void:
 	if body == tracked_player:
 		tracked_player = null
+
+func _on_command_aura_body_entered(body: Node) -> void:
+	if not body or body == self:
+		return
+	if body.has_method("set_commander_aura_bonus"):
+		body.set_commander_aura_bonus(1.12)
+		_is_commander_active = true
+
+func _on_command_aura_body_exited(body: Node) -> void:
+	if not body or body == self:
+		return
+	if body.has_method("set_commander_aura_bonus"):
+		body.set_commander_aura_bonus(1.0)

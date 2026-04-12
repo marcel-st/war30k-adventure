@@ -21,6 +21,7 @@ var armor: float = 100.0
 var current_combat_move_speed_multiplier: float = 1.0
 var _hit_reaction_timer: float = 0.0
 var _hit_reaction_amount: float = 0.0
+var _ability_speed_multiplier: float = 1.0
 
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -32,12 +33,20 @@ func _ready() -> void:
 	GameState.armor = armor
 	GameState.configure_ammo(30, 120)
 	GameState.emit_player_stats()
+	if AbilitySystem and AbilitySystem.has_method("set_player"):
+		AbilitySystem.set_player(self)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("restart_mission"):
 		GameState.request_restart()
 	if event.is_action_pressed("pause"):
 		_toggle_mouse_capture()
+	if event.is_action_pressed("ability_primary"):
+		AbilitySystem.trigger_ability("resilience_surge")
+	if event.is_action_pressed("ability_secondary"):
+		AbilitySystem.trigger_ability("toxic_grenade")
+	if event.is_action_pressed("ability_tertiary"):
+		AbilitySystem.trigger_ability("rally_command")
 
 func _physics_process(delta: float) -> void:
 	_apply_gravity(delta)
@@ -97,6 +106,8 @@ func _process_combat() -> void:
 		boltgun.start_reload()
 
 	current_combat_move_speed_multiplier = boltgun.get_move_speed_multiplier()
+	_ability_speed_multiplier = AbilitySystem.get_move_speed_multiplier()
+	current_combat_move_speed_multiplier *= _ability_speed_multiplier
 
 func apply_damage(raw_damage: float, _source_position: Vector3 = Vector3.ZERO) -> void:
 	if raw_damage <= 0.0 or health <= 0.0:
@@ -112,6 +123,20 @@ func apply_damage(raw_damage: float, _source_position: Vector3 = Vector3.ZERO) -
 	GameState.emit_player_stats()
 	if health <= 0.0:
 		GameState.mark_mission_failed()
+
+func add_bonus_armor(amount: float) -> void:
+	if amount <= 0.0:
+		return
+	armor = minf(max_armor, armor + amount)
+	GameState.armor = armor
+	GameState.emit_player_stats()
+
+func add_bonus_health(amount: float) -> void:
+	if amount <= 0.0:
+		return
+	health = minf(max_health, health + amount)
+	GameState.health = health
+	GameState.emit_player_stats()
 
 func _toggle_mouse_capture() -> void:
 	if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:

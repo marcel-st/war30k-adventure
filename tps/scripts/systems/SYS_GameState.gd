@@ -10,9 +10,15 @@ signal run_state_changed(state: String)
 signal story_chapter_changed(chapter_id: String, chapter_title: String)
 signal restart_requested()
 signal story_contact_requested(contact_id: String)
+signal ability_cooldowns_changed(values: Dictionary)
+signal progression_changed(level: int, xp: int, requisition: int)
+signal chapter_reward_unlocked(chapter_id: String, reward_id: String)
+signal wave_skip_requested()
+signal chapter_cycle_requested()
 
 const MAX_HEALTH := 100.0
 const MAX_ARMOR := 100.0
+const MAX_ABILITY_SLOTS := 3
 
 var health: float = MAX_HEALTH
 var armor: float = MAX_ARMOR
@@ -29,6 +35,19 @@ var mission_state: String = "active"
 var mission_state_reason: String = ""
 var story_chapter_id: String = "ch1"
 var story_chapter_title: String = "Drop Site Aftermath"
+var player_level: int = 1
+var player_xp: int = 0
+var player_requisition: int = 0
+var unlocked_weapon_mods: Dictionary = {}
+var unlocked_perks: Dictionary = {}
+var chapter_rewards: Dictionary = {}
+var ability_cooldowns: Dictionary = {
+	"resilience_surge": 0.0,
+	"toxic_grenade": 0.0,
+	"rally_command": 0.0
+}
+var ability_order: Array[String] = ["resilience_surge", "toxic_grenade", "rally_command"]
+var commander_controller: Node = null
 
 func _ready() -> void:
 	_setup_default_input_actions()
@@ -48,6 +67,8 @@ func reset_run() -> void:
 	mission_state_reason = ""
 	story_chapter_id = "ch1"
 	story_chapter_title = "Drop Site Aftermath"
+	player_level = max(1, player_level)
+	_reset_ability_cooldowns()
 	emit_player_stats()
 	emit_signal("objective_changed", objective_text, objective_completed)
 	emit_signal("enemies_remaining_changed", enemies_remaining)
@@ -56,6 +77,8 @@ func reset_run() -> void:
 	emit_signal("mission_state_changed", mission_state, mission_state_reason)
 	emit_signal("run_state_changed", mission_state)
 	emit_signal("story_chapter_changed", story_chapter_id, story_chapter_title)
+	emit_signal("progression_changed", player_level, player_xp, player_requisition)
+	emit_signal("ability_cooldowns_changed", ability_cooldowns.duplicate(true))
 
 func configure_ammo(magazine: int, reserve: int) -> void:
 	ammo_in_magazine = maxi(0, magazine)
@@ -145,10 +168,81 @@ func set_story_chapter(chapter_id: String, chapter_title: String) -> void:
 func request_restart() -> void:
 	emit_signal("restart_requested")
 
+func request_wave_skip() -> void:
+	emit_signal("wave_skip_requested")
+
+func request_cycle_chapter() -> void:
+	emit_signal("cycle_chapter_requested")
+
 func start_contact_moment(contact_id: String) -> void:
 	if contact_id == "":
 		return
 	emit_signal("story_contact_requested", contact_id)
+
+func gain_progression(xp_delta: int, requisition_delta: int) -> void:
+	player_xp = maxi(0, player_xp + xp_delta)
+	player_requisition = maxi(0, player_requisition + requisition_delta)
+	var threshold: int = _xp_threshold_for_level(player_level)
+	while player_xp >= threshold:
+		player_xp -= threshold
+		player_level += 1
+		push_event_message("Level up achieved: %d" % player_level)
+		threshold = _xp_threshold_for_level(player_level)
+	emit_signal("progression_changed", player_level, player_xp, player_requisition)
+
+func unlock_chapter_reward(chapter_id: String, reward_id: String) -> void:
+	if chapter_id == "" or reward_id == "":
+		return
+	if not chapter_rewards.has(chapter_id):
+		chapter_rewards[chapter_id] = {}
+	var chapter_dict: Dictionary = chapter_rewards[chapter_id] as Dictionary
+	if chapter_dict.has(reward_id):
+		return
+	chapter_dict[reward_id] = true
+	chapter_rewards[chapter_id] = chapter_dict
+	emit_signal("chapter_reward_unlocked", chapter_id, reward_id)
+
+func trigger_ability(ability_id: String) -> bool:
+	if ability_id == "":
+		return false
+	if not ability_cooldowns.has(ability_id):
+		return false
+	if float(ability_cooldowns[ability_id]) > 0.0:
+		return false
+	var cooldown: float = 12.0
+	match ability_id:
+		"resilience_surge":
+			cooldown = 18.0
+			push_event_message("Ability: Resilience Surge activated.")
+		"toxic_grenade":
+			cooldown = 14.0
+			push_event_message("Ability: Toxic Grenade deployed.")
+		"rally_command":
+			cooldown = 22.0
+			push_event_message("Ability: Rally Command issued.")
+		_:
+			cooldown = 12.0
+			push_event_message("Ability activated: %s" % ability_id)
+	ability_cooldowns[ability_id] = cooldown
+	emit_signal("ability_cooldowns_changed", ability_cooldowns.duplicate(true))
+	if EventBus and EventBus.has_method("emit_event"):
+		EventBus.emit_event("ability_triggered", {"ability_id": ability_id, "cooldown": cooldown})
+	return true
+
+func tick_ability_cooldowns(delta: float) -> void:
+	if delta <= 0.0:
+		return
+	var changed: bool = false
+	for key in ability_cooldowns.keys():
+		var current: float = float(ability_cooldowns[key])
+		if current <= 0.0:
+			continue
+		var next_value: float = maxf(0.0, current - delta)
+		if next_value != current:
+			ability_cooldowns[key] = next_value
+			changed = true
+	if changed:
+		emit_signal("ability_cooldowns_changed", ability_cooldowns.duplicate(true))
 
 func emit_player_stats() -> void:
 	emit_signal("player_stats_changed", health, armor, ammo_in_magazine, ammo_reserve)
@@ -217,6 +311,26 @@ func _setup_default_input_actions() -> void:
 		_joy_button_event(JOY_BUTTON_B),
 		_joy_button_event(JOY_BUTTON_START)
 	])
+	_ensure_action("ability_primary", [
+		_key_event(KEY_Q),
+		_joy_button_event(JOY_BUTTON_X)
+	])
+	_ensure_action("ability_secondary", [
+		_key_event(KEY_F),
+		_joy_button_event(JOY_BUTTON_DPAD_UP)
+	])
+	_ensure_action("ability_tertiary", [
+		_key_event(KEY_C),
+		_joy_button_event(JOY_BUTTON_DPAD_RIGHT)
+	])
+	_ensure_action("quick_save", [
+		_key_event(KEY_F5),
+		_joy_button_event(JOY_BUTTON_DPAD_LEFT)
+	])
+	_ensure_action("quick_load", [
+		_key_event(KEY_F9),
+		_joy_button_event(JOY_BUTTON_DPAD_DOWN)
+	])
 
 func _ensure_action(action_name: String, events: Array[InputEvent]) -> void:
 	if not InputMap.has_action(action_name):
@@ -246,3 +360,56 @@ func _joy_motion_event(axis: JoyAxis, axis_value: float) -> InputEventJoypadMoti
 	ev.axis = axis
 	ev.axis_value = axis_value
 	return ev
+
+func _xp_threshold_for_level(level: int) -> int:
+	return 120 + maxi(1, level) * 40
+
+func _reset_ability_cooldowns() -> void:
+	for ability in ability_order:
+		ability_cooldowns[ability] = 0.0
+
+func get_profile_entry(domain: String, array_key: String, entry_id: String) -> Dictionary:
+	if domain == "" or array_key == "" or entry_id == "":
+		return {}
+	if not has_node("CombatData"):
+		return {}
+	var combat_data: Node = get_node("CombatData")
+	var method_name: String = "get_%s_profile" % domain.trim_suffix("s")
+	if combat_data.has_method(method_name):
+		return combat_data.call(method_name, entry_id)
+	return {}
+
+func grant_progression_reward(reward_key: String) -> void:
+	match reward_key:
+		"objective_optional":
+			gain_progression(40, 30)
+		"boss_defeated":
+			gain_progression(120, 90)
+		_:
+			gain_progression(20, 10)
+
+func get_enemy_role_profile(role_id: String) -> Dictionary:
+	var combat_data: Node = get_node_or_null("CombatData")
+	if combat_data == null or not combat_data.has_method("get_squad_profile"):
+		return {}
+	var squad_profile: Dictionary = combat_data.get_squad_profile("vs01_default")
+	if squad_profile.is_empty():
+		return {}
+	var role_map: Dictionary = squad_profile.get("traitor_roles", {})
+	if role_map.is_empty():
+		return {}
+	if role_map.has(role_id):
+		var role_entry: Variant = role_map[role_id]
+		if role_entry is Dictionary:
+			return role_entry as Dictionary
+	return {}
+
+func register_elite_controller(elite_node: Node) -> void:
+	if elite_node and elite_node.is_in_group("traitor_commander"):
+		return
+	if elite_node and elite_node.has_method("add_to_group"):
+		elite_node.add_to_group("traitor_commander")
+
+func clear_elite_controller(elite_node: Node) -> void:
+	if elite_node and elite_node.has_method("remove_from_group"):
+		elite_node.remove_from_group("traitor_commander")

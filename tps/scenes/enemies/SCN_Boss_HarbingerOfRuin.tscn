@@ -1,0 +1,54 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/ai/AI_BossHarbinger.gd" id="1_boss"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_boss"]
+radius = 0.72
+height = 1.8
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_boss"]
+radius = 0.72
+height = 1.9
+
+[sub_resource type="SphereMesh" id="SphereMesh_head"]
+radius = 0.36
+height = 0.7
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_body"]
+albedo_color = Color(0.26, 0.41, 0.23, 1)
+metallic = 0.35
+roughness = 0.74
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_trim"]
+albedo_color = Color(0.48, 0.34, 0.18, 1)
+metallic = 0.42
+roughness = 0.66
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_awareness"]
+radius = 42.0
+
+[node name="BossHarbingerOfRuin" type="CharacterBody3D"]
+script = ExtResource("1_boss")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CapsuleShape3D_boss")
+position = Vector3(0, 1.35, 0)
+
+[node name="VisualRoot" type="Node3D" parent="."]
+
+[node name="BodyMesh" type="MeshInstance3D" parent="VisualRoot"]
+mesh = SubResource("CapsuleMesh_boss")
+position = Vector3(0, 1.35, 0)
+surface_material_override/0 = SubResource("StandardMaterial3D_body")
+
+[node name="HeadMesh" type="MeshInstance3D" parent="VisualRoot"]
+mesh = SubResource("SphereMesh_head")
+position = Vector3(0, 2.35, 0)
+surface_material_override/0 = SubResource("StandardMaterial3D_trim")
+
+[node name="Awareness" type="Area3D" parent="."]
+collision_layer = 0
+collision_mask = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Awareness"]
+shape = SubResource("SphereShape3D_awareness")

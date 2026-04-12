@@ -6,6 +6,9 @@ signal contact_triggered(contact_id: String)
 signal cutscene_started(cutscene_id: String)
 signal cutscene_finished(cutscene_id: String)
 signal subtitle_changed(speaker: String, text: String)
+signal branch_choice_required(branch_id: String, options: Array[String])
+signal branch_choice_applied(branch_id: String, choice_id: String)
+signal branch_choice_made(chapter_id: String, choice_id: String)
 
 @export var chapter_data_path: String = "res://data/story/chapters/chapters.json"
 
@@ -21,6 +24,9 @@ var _triggered_contacts: Dictionary = {}
 var _completed_cutscenes: Dictionary = {}
 var _playing_contact: bool = false
 var _pending_contacts: Array[String] = []
+var _branch_state: Dictionary = {}
+var _chapter_summary_queue: Array[String] = []
+var _branch_flags: Dictionary = {}
 
 func _ready() -> void:
 	_load_chapter_data()
@@ -46,6 +52,7 @@ func start_chapter(chapter_id: String) -> void:
 	var chapter_title: String = str(chapter.get("title", chapter_id))
 	emit_signal("chapter_loaded", chapter_id, chapter_title)
 	GameState.set_story_chapter(chapter_id, chapter_title)
+	_emit_branch_choice_for_chapter(chapter_id)
 	_pending_contacts.clear()
 	_playing_contact = false
 
@@ -89,6 +96,18 @@ func queue_contact(contact_id: String) -> void:
 	_pending_contacts.append(contact_id)
 	_try_run_next_contact()
 
+func register_branch_choice(branch_id: String, choice_id: String) -> void:
+	if branch_id == "" or choice_id == "":
+		return
+	_branch_state[branch_id] = choice_id
+	emit_signal("branch_choice_applied", branch_id, choice_id)
+	GameState.push_event_message("Branch set: %s -> %s" % [branch_id, choice_id])
+
+func get_branch_choice(branch_id: String, fallback: String = "") -> String:
+	if _branch_state.has(branch_id):
+		return str(_branch_state[branch_id])
+	return fallback
+
 func trigger_contact(contact_id: String) -> void:
 	queue_contact(contact_id)
 
@@ -128,11 +147,17 @@ func _play_contact(contact_id: String) -> void:
 
 	var contact_name: String = str(contact_entry.get("display_name", contact_id))
 	var objective_update: String = str(contact_entry.get("objective_update", ""))
+	var branch_id: String = str(contact_entry.get("branch_id", ""))
+	var branch_choices: Array[String] = _extract_string_array(contact_entry.get("branch_choices", []))
 	_playing_contact = true
 	emit_signal("contact_triggered", contact_id)
 	_triggered_contacts[contact_id] = true
 	GameState.push_event_message("Contact established: %s" % contact_name)
 	await _dialogue_ui.play_contact(contact_id, contact_lines)
+	if branch_id != "" and not branch_choices.is_empty():
+		emit_signal("branch_choice_required", branch_id, branch_choices)
+		register_branch_choice(branch_id, branch_choices[0])
+		GameState.push_event_message("Branch selected [%s]: %s" % [branch_id, branch_choices[0]])
 	if objective_update != "":
 		GameState.set_objective(objective_update)
 	_playing_contact = false
@@ -168,6 +193,14 @@ func _extract_line_dicts(lines_variant: Variant) -> Array[Dictionary]:
 	for line_variant in lines_variant as Array:
 		if line_variant is Dictionary:
 			output.append(line_variant as Dictionary)
+	return output
+
+func _extract_string_array(value: Variant) -> Array[String]:
+	var output: Array[String] = []
+	if not (value is Array):
+		return output
+	for item in value as Array:
+		output.append(str(item))
 	return output
 
 func _load_chapter_data() -> void:
@@ -239,3 +272,19 @@ func _on_cutscene_started(cutscene_id: String) -> void:
 
 func _on_cutscene_finished(cutscene_id: String, _skipped: bool) -> void:
 	emit_signal("cutscene_finished", cutscene_id)
+
+func _emit_branch_choice_for_chapter(chapter_id: String) -> void:
+	var choice_id: String = "default_path"
+	match chapter_id:
+		"ch1_drop_site_aftermath":
+			choice_id = "hold_the_line"
+		"ch2_warp_transit_crisis":
+			choice_id = "secure_relay"
+		"ch3_blockade_breach":
+			choice_id = "breach_aggressive"
+		"ch4_terra_relay":
+			choice_id = "transmit_priority"
+		_:
+			choice_id = "default_path"
+	_branch_flags[chapter_id] = choice_id
+	emit_signal("branch_choice_made", chapter_id, choice_id)

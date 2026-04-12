@@ -15,6 +15,7 @@ signal died(enemy: Node3D)
 @export var corpse_lifetime: float = 2.2
 @export var hit_react_duration: float = 0.12
 @export var hit_react_knockback: float = 2.1
+@export var enemy_role: String = "suppressor"
 
 const PROJECTILE_SCENE: PackedScene = preload("res://scenes/enemies/SCN_EnemyProjectile.tscn")
 
@@ -30,10 +31,16 @@ var is_dead: bool = false
 var attack_timer: float = 0.0
 var hit_react_timer: float = 0.0
 var tracked_player: CharacterBody3D = null
+var _role_profile: Dictionary = {}
 
 func _ready() -> void:
 	gravity = ProjectSettings.get_setting("physics/3d/default_gravity", 24.0) * gravity_scale
 	health = max_health
+	_role_profile = GameState.get_enemy_role_profile(enemy_role)
+	if not _role_profile.is_empty():
+		ideal_range = float(_role_profile.get("preferred_range", ideal_range))
+		retreat_range = maxf(2.0, ideal_range * 0.55)
+		attack_cooldown = float(_role_profile.get("shoot_interval", attack_cooldown))
 	var awareness_shape: CollisionShape3D = awareness_area.get_node_or_null("CollisionShape3D") as CollisionShape3D
 	if awareness_shape and awareness_shape.shape is SphereShape3D:
 		(awareness_shape.shape as SphereShape3D).radius = detection_radius

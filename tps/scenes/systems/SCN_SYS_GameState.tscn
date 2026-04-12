@@ -1,10 +1,42 @@
-[gd_scene load_steps=3 format=3 uid="uid://gstate-root"]
+[gd_scene load_steps=11 format=3 uid="uid://gstate-root"]
 
 [ext_resource type="Script" path="res://scripts/systems/SYS_GameState.gd" id="1_sys"]
 [ext_resource type="Script" path="res://scripts/systems/SYS_ProjectilePool.gd" id="2_pool"]
+[ext_resource type="Script" path="res://scripts/systems/SYS_EventBus.gd" id="3_bus"]
+[ext_resource type="Script" path="res://scripts/systems/SYS_DebugTools.gd" id="4_dbg"]
+[ext_resource type="Script" path="res://scripts/systems/SYS_CombatData.gd" id="5_combat"]
+[ext_resource type="Script" path="res://scripts/systems/SYS_AbilitySystem.gd" id="6_ability"]
+[ext_resource type="Script" path="res://scripts/systems/SYS_Progression.gd" id="7_progress"]
+[ext_resource type="Script" path="res://scripts/systems/SYS_Settings.gd" id="8_settings"]
+[ext_resource type="Script" path="res://scripts/systems/SYS_QATools.gd" id="9_qa"]
+[ext_resource type="Script" path="res://scripts/systems/SYS_AbilityBridge.gd" id="10_bridge"]
 
 [node name="GameState" type="Node"]
 script = ExtResource("1_sys")
 
 [node name="ProjectilePool" type="Node" parent="."]
 script = ExtResource("2_pool")
+
+[node name="EventBus" type="Node" parent="."]
+script = ExtResource("3_bus")
+
+[node name="DebugTools" type="Node" parent="."]
+script = ExtResource("4_dbg")
+
+[node name="CombatData" type="Node" parent="."]
+script = ExtResource("5_combat")
+
+[node name="AbilitySystem" type="Node" parent="."]
+script = ExtResource("6_ability")
+
+[node name="AbilityBridge" type="Node" parent="."]
+script = ExtResource("10_bridge")
+
+[node name="Progression" type="Node" parent="."]
+script = ExtResource("7_progress")
+
+[node name="Settings" type="Node" parent="."]
+script = ExtResource("8_settings")
+
+[node name="QATools" type="Node" parent="."]
+script = ExtResource("9_qa")

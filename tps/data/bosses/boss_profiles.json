@@ -1,0 +1,23 @@
+{
+  "bosses": [
+    {
+      "boss_id": "boss_ch1_iron_reaver",
+      "chapter_id": "ch1_drop_site_aftermath",
+      "display_name": "Iron Reaver",
+      "max_health": 420.0,
+      "phases": [
+        {
+          "threshold": 1.0,
+          "behavior": "aggressive_melee",
+          "ability_cooldown": 5.5
+        },
+        {
+          "threshold": 0.55,
+          "behavior": "shockwave_and_summon",
+          "ability_cooldown": 4.0
+        }
+      ],
+      "reward_id": "reward_ch1_boss"
+    }
+  ]
+}
