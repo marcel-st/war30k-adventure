@@ -6,6 +6,7 @@ extends CanvasLayer
 @onready var objective_label: Label = $Margin/VBox/ObjectiveLabel
 @onready var event_label: Label = $Margin/VBox/EventLabel
 @onready var status_label: Label = $Margin/VBox/StatusLabel
+@onready var chapter_label: Label = $Margin/VBox/ChapterLabel
 
 func _ready() -> void:
 	GameState.player_stats_changed.connect(_on_player_stats_changed)
@@ -14,6 +15,7 @@ func _ready() -> void:
 	GameState.wave_changed.connect(_on_wave_changed)
 	GameState.event_feed_changed.connect(_on_event_feed_changed)
 	GameState.mission_state_changed.connect(_on_mission_state_changed)
+	GameState.story_chapter_changed.connect(_on_story_chapter_changed)
 	_on_player_stats_changed(
 		GameState.health,
 		GameState.armor,
@@ -24,6 +26,7 @@ func _ready() -> void:
 	_on_wave_changed(GameState.current_wave, GameState.total_waves)
 	_on_event_feed_changed(GameState.event_feed_text)
 	_on_mission_state_changed(GameState.mission_state, GameState.mission_state_reason)
+	_on_story_chapter_changed(GameState.story_chapter_id, GameState.story_chapter_title)
 	_on_objective_changed(GameState.objective_text, GameState.objective_completed)
 
 func _on_player_stats_changed(health: float, armor: float, magazine: int, reserve: int) -> void:
@@ -62,3 +65,7 @@ func _on_mission_state_changed(run_state: String, _reason: String) -> void:
 			status_label.text = "STATUS: OBJECTIVE COMPLETE - Press R/Enter/Start to replay"
 		_:
 			status_label.text = "STATUS: ACTIVE"
+
+func _on_story_chapter_changed(_chapter_id: String, chapter_title: String) -> void:
+	if chapter_label:
+		chapter_label.text = "Chapter: %s" % chapter_title

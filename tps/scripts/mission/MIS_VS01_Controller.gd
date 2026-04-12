@@ -2,6 +2,9 @@ extends Node3D
 
 @onready var extraction_zone: Area3D = $ExtractionZone
 @onready var enemy_container: Node3D = $Enemies
+@onready var story_systems: Node = $StorySystems
+@onready var story_trigger_ch2: Area3D = $StoryCutsceneTrigger_CH2
+@onready var story_trigger_ch3: Area3D = $StoryCutsceneTrigger_CH3
 
 const TRAITOR_SCENE: PackedScene = preload("res://scenes/enemies/SCN_EnemyTraitorMarine.tscn")
 const CULTIST_SCENE: PackedScene = preload("res://scenes/enemies/SCN_EnemyCultistRanged.tscn")
@@ -38,12 +41,25 @@ var _encounter_token: int = 0
 var _mission_failed: bool = false
 var _can_restart: bool = false
 var _restart_debounce: float = 0.0
+var _chapter_triggered: Dictionary = {}
+var _current_chapter_number: int = 1
 
 func _ready() -> void:
 	GameState.reset_run()
 	_refresh_player_group_tag()
 	extraction_zone.body_entered.connect(_on_extraction_body_entered)
+	story_trigger_ch2.body_entered.connect(_on_story_trigger_body_entered.bind(2))
+	story_trigger_ch3.body_entered.connect(_on_story_trigger_body_entered.bind(3))
 	GameState.mission_state_changed.connect(_on_mission_state_changed)
+	GameState.restart_requested.connect(_on_restart_requested)
+	GameState.story_contact_requested.connect(_on_story_contact_requested)
+	if story_systems and story_systems.has_method("bootstrap_story"):
+		story_systems.bootstrap_story()
+	if story_systems and story_systems.has_method("play_chapter_intro"):
+		story_systems.play_chapter_intro(1)
+	if story_systems and story_systems.has_method("request_contact"):
+		story_systems.request_contact("ch1_contact_ignatius")
+	_chapter_triggered[1] = true
 	extraction_zone.monitoring = false
 	_start_next_wave()
 
@@ -62,6 +78,12 @@ func _physics_process(_delta: float) -> void:
 
 func _on_extraction_body_entered(body: Node) -> void:
 	if body.is_in_group("player"):
+		if story_systems and story_systems.has_method("play_chapter_intro"):
+			if _current_chapter_number < 4:
+				_current_chapter_number = 4
+				story_systems.play_chapter_intro(4)
+		if story_systems and story_systems.has_method("request_contact"):
+			story_systems.request_contact("ch4_contact_relay")
 		GameState.complete_objective("Extraction reached. Loyalist warning secured.")
 		GameState.set_mission_state("victory", "Extraction reached")
 		_can_restart = true
@@ -93,6 +115,15 @@ func _start_next_wave() -> void:
 	GameState.set_wave_progress(_wave_index + 1, _waves.size())
 	GameState.set_enemies_remaining(total_count)
 	GameState.push_event_message("Wave %d started: %d hostiles." % [_wave_index + 1, total_count])
+	if story_systems and story_systems.has_method("request_contact"):
+		if _wave_index == 0:
+			story_systems.request_contact("ch1_contact_macer")
+		elif _wave_index == 1:
+			if _current_chapter_number < 2:
+				_current_chapter_number = 2
+				if story_systems and story_systems.has_method("play_chapter_intro"):
+					story_systems.play_chapter_intro(2)
+			story_systems.request_contact("ch2_contact_hest")
 	_is_spawning_wave = true
 	await _spawn_wave_units(melee_count, ranged_count, elite_count, spawn_interval)
 	_is_spawning_wave = false
@@ -202,3 +233,30 @@ func _on_mission_state_changed(new_state: String) -> void:
 		_restart_debounce = 0.25
 		_encounter_token += 1
 		extraction_zone.monitoring = false
+
+func _on_story_trigger_body_entered(body: Node, chapter_number: int) -> void:
+	if not body.is_in_group("player"):
+		return
+	if _chapter_triggered.get(chapter_number, false):
+		return
+	_chapter_triggered[chapter_number] = true
+	if chapter_number > _current_chapter_number:
+		_current_chapter_number = chapter_number
+	if story_systems and story_systems.has_method("play_chapter_intro"):
+		story_systems.play_chapter_intro(chapter_number)
+	if story_systems and story_systems.has_method("request_contact"):
+		match chapter_number:
+			2:
+				story_systems.request_contact("ch2_contact_hest")
+			3:
+				story_systems.request_contact("ch3_contact_luna_vox")
+			4:
+				story_systems.request_contact("ch4_contact_malcador")
+
+func _on_restart_requested() -> void:
+	if _can_restart and _restart_debounce <= 0.0:
+		get_tree().reload_current_scene()
+
+func _on_story_contact_requested(contact_id: String) -> void:
+	if story_systems and story_systems.has_method("request_contact"):
+		story_systems.request_contact(contact_id)

@@ -7,6 +7,9 @@ signal wave_changed(current_wave: int, total_waves: int)
 signal event_feed_changed(text: String)
 signal mission_state_changed(state: String, reason: String)
 signal run_state_changed(state: String)
+signal story_chapter_changed(chapter_id: String, chapter_title: String)
+signal restart_requested()
+signal story_contact_requested(contact_id: String)
 
 const MAX_HEALTH := 100.0
 const MAX_ARMOR := 100.0
@@ -24,6 +27,8 @@ var encounter_event_text: String = ""
 var event_feed_text: String = ""
 var mission_state: String = "active"
 var mission_state_reason: String = ""
+var story_chapter_id: String = "ch1"
+var story_chapter_title: String = "Drop Site Aftermath"
 
 func _ready() -> void:
 	_setup_default_input_actions()
@@ -41,6 +46,8 @@ func reset_run() -> void:
 	event_feed_text = ""
 	mission_state = "active"
 	mission_state_reason = ""
+	story_chapter_id = "ch1"
+	story_chapter_title = "Drop Site Aftermath"
 	emit_player_stats()
 	emit_signal("objective_changed", objective_text, objective_completed)
 	emit_signal("enemies_remaining_changed", enemies_remaining)
@@ -48,6 +55,7 @@ func reset_run() -> void:
 	emit_signal("event_feed_changed", event_feed_text)
 	emit_signal("mission_state_changed", mission_state, mission_state_reason)
 	emit_signal("run_state_changed", mission_state)
+	emit_signal("story_chapter_changed", story_chapter_id, story_chapter_title)
 
 func configure_ammo(magazine: int, reserve: int) -> void:
 	ammo_in_magazine = maxi(0, magazine)
@@ -122,6 +130,26 @@ func set_mission_state(state: String, reason: String = "") -> void:
 	emit_signal("mission_state_changed", mission_state, mission_state_reason)
 	emit_signal("run_state_changed", mission_state)
 
+func mark_mission_failed(reason: String = "Player eliminated") -> void:
+	if mission_state == "failed":
+		return
+	set_objective("Mission failed. Press Enter or gamepad Start to restart.")
+	set_mission_state("failed", reason)
+	push_event_message("Brothers down. Extract and regroup.")
+
+func set_story_chapter(chapter_id: String, chapter_title: String) -> void:
+	story_chapter_id = chapter_id
+	story_chapter_title = chapter_title
+	emit_signal("story_chapter_changed", story_chapter_id, story_chapter_title)
+
+func request_restart() -> void:
+	emit_signal("restart_requested")
+
+func start_contact_moment(contact_id: String) -> void:
+	if contact_id == "":
+		return
+	emit_signal("story_contact_requested", contact_id)
+
 func emit_player_stats() -> void:
 	emit_signal("player_stats_changed", health, armor, ammo_in_magazine, ammo_reserve)
 
@@ -174,6 +202,21 @@ func _setup_default_input_actions() -> void:
 		_joy_button_event(JOY_BUTTON_LEFT_STICK)
 	])
 	_ensure_action("pause", [_key_event(KEY_ESCAPE)])
+	_ensure_action("interact", [
+		_key_event(KEY_E),
+		_joy_button_event(JOY_BUTTON_A)
+	])
+	_ensure_action("dialogue_continue", [
+		_key_event(KEY_ENTER),
+		_key_event(KEY_KP_ENTER),
+		_mouse_button_event(MOUSE_BUTTON_LEFT),
+		_joy_button_event(JOY_BUTTON_A)
+	])
+	_ensure_action("skip_cutscene", [
+		_key_event(KEY_ESCAPE),
+		_joy_button_event(JOY_BUTTON_B),
+		_joy_button_event(JOY_BUTTON_START)
+	])
 
 func _ensure_action(action_name: String, events: Array[InputEvent]) -> void:
 	if not InputMap.has_action(action_name):

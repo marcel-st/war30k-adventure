@@ -1,0 +1,22 @@
+{
+  "contacts": [
+    {
+      "contact_id": "ch3_contact_luna_vox",
+      "title": "Luna Vox Breach",
+      "lines": [
+        {
+          "speaker": "Bridge Vox",
+          "text": "Boarding craft on converging vectors. Luna corridor is collapsing."
+        },
+        {
+          "speaker": "Death Guard Captain",
+          "text": "Hold this deck. The warning reaches Terra or we die at the relay."
+        },
+        {
+          "speaker": "Bridge Vox",
+          "text": "Acknowledged. Bulkhead locks disengaging for counter-board action."
+        }
+      ]
+    }
+  ]
+}

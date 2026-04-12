@@ -1,0 +1,42 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/STY_DialogueUI.gd" id="1_ui"]
+
+[node name="SCN_UI_Dialogue" type="CanvasLayer"]
+script = ExtResource("1_ui")
+
+[node name="RootMargin" type="MarginContainer" parent="."]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 22.0
+offset_top = -230.0
+offset_right = -22.0
+offset_bottom = -22.0
+grow_vertical = 0
+visible = false
+
+[node name="Panel" type="PanelContainer" parent="RootMargin"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBox" type="VBoxContainer" parent="RootMargin/Panel"]
+theme_override_constants/separation = 8
+
+[node name="SpeakerLabel" type="Label" parent="RootMargin/Panel/VBox"]
+text = "Speaker"
+theme_override_font_sizes/font_size = 22
+
+[node name="LineLabel" type="RichTextLabel" parent="RootMargin/Panel/VBox"]
+bbcode_enabled = false
+fit_content = false
+size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 110)
+text = "Dialogue line."
+scroll_active = false
+theme_override_font_sizes/normal_font_size = 20
+
+[node name="HintLabel" type="Label" parent="RootMargin/Panel/VBox"]
+text = "Press Enter / A to continue • Esc / B to skip"
+theme_override_font_sizes/font_size = 16
