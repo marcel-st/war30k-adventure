@@ -5,6 +5,7 @@ signal objective_changed(text: String, completed: bool)
 signal enemies_remaining_changed(remaining: int)
 signal wave_changed(current_wave: int, total_waves: int)
 signal encounter_event_changed(text: String)
+signal event_feed_changed(text: String)
 
 const MAX_HEALTH := 100.0
 const MAX_ARMOR := 100.0
@@ -19,6 +20,7 @@ var enemies_remaining: int = 0
 var current_wave: int = 0
 var total_waves: int = 0
 var encounter_event_text: String = ""
+var event_feed_text: String = ""
 
 func _ready() -> void:
 	_setup_default_input_actions()
@@ -33,11 +35,13 @@ func reset_run() -> void:
 	current_wave = 0
 	total_waves = 0
 	encounter_event_text = ""
+	event_feed_text = ""
 	emit_player_stats()
 	emit_signal("objective_changed", objective_text, objective_completed)
 	emit_signal("enemies_remaining_changed", enemies_remaining)
 	emit_signal("wave_changed", current_wave, total_waves)
 	emit_signal("encounter_event_changed", encounter_event_text)
+	emit_signal("event_feed_changed", event_feed_text)
 
 func configure_ammo(magazine: int, reserve: int) -> void:
 	ammo_in_magazine = maxi(0, magazine)
@@ -98,7 +102,12 @@ func set_wave_progress(current: int, total: int) -> void:
 
 func set_encounter_event(text: String) -> void:
 	encounter_event_text = text
+	event_feed_text = text
 	emit_signal("encounter_event_changed", encounter_event_text)
+	emit_signal("event_feed_changed", event_feed_text)
+
+func push_event_message(text: String) -> void:
+	set_encounter_event(text)
 
 func emit_player_stats() -> void:
 	emit_signal("player_stats_changed", health, armor, ammo_in_magazine, ammo_reserve)

@@ -135,12 +135,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 1.2, -17)
 
 [node name="WaveSpawnA" type="Marker3D" parent="WaveSpawnPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 1.2, -10)
+groups = ["enemy_spawn"]
 
 [node name="WaveSpawnB" type="Marker3D" parent="WaveSpawnPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 1.2, -13)
+groups = ["enemy_spawn"]
 
 [node name="WaveSpawnC" type="Marker3D" parent="WaveSpawnPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 1.2, -17)
+groups = ["enemy_spawn"]
 
 [node name="ExtractionZone" type="Area3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -22)
