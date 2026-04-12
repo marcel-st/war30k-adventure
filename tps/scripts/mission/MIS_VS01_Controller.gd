@@ -43,10 +43,15 @@ var _can_restart: bool = false
 var _restart_debounce: float = 0.0
 var _chapter_triggered: Dictionary = {}
 var _current_chapter_number: int = 1
+var _spawn_markers: Array[Marker3D] = []
+var _enemy_compact_timer: float = 0.0
+
+const ENEMY_COMPACT_INTERVAL: float = 0.5
 
 func _ready() -> void:
 	GameState.reset_run()
 	_refresh_player_group_tag()
+	_cache_spawn_markers()
 	extraction_zone.body_entered.connect(_on_extraction_body_entered)
 	story_trigger_ch2.body_entered.connect(_on_story_trigger_body_entered.bind(2))
 	story_trigger_ch3.body_entered.connect(_on_story_trigger_body_entered.bind(3))
@@ -72,7 +77,10 @@ func _physics_process(_delta: float) -> void:
 			return
 	if _mission_failed:
 		return
-	_cleanup_dead_enemies()
+	_enemy_compact_timer = maxf(0.0, _enemy_compact_timer - _delta)
+	if _enemy_compact_timer <= 0.0:
+		_enemy_compact_timer = ENEMY_COMPACT_INTERVAL
+		_compact_active_enemies()
 	if _active_enemies.is_empty() and not _combat_completed and not _is_spawning_wave:
 		_start_next_wave()
 
@@ -153,6 +161,7 @@ func _spawn_unit(spawn_scene: PackedScene, spawn_position: Vector3) -> void:
 	enemy_container.add_child(enemy)
 	enemy.global_position = spawn_position
 	_active_enemies.append(enemy)
+	GameState.set_enemies_remaining(_active_enemies.size())
 
 func _start_wave_events(wave_data: Dictionary) -> void:
 	var events_variant: Variant = wave_data.get("events", [])
@@ -205,22 +214,32 @@ func _spawn_reinforcement_group(unit_name: String, count: int, interval: float, 
 		)
 
 func _pick_spawn_position(index: int) -> Vector3:
-	var marker_nodes: Array[Node] = get_tree().get_nodes_in_group("enemy_spawn")
-	if marker_nodes.is_empty():
+	if _spawn_markers.is_empty():
+		_cache_spawn_markers()
+	if _spawn_markers.is_empty():
 		return Vector3(0.0, 1.1, -10.0 - float(index) * 2.5)
-	var marker_index: int = index % marker_nodes.size()
-	var marker: Node3D = marker_nodes[marker_index] as Node3D
+	var marker_index: int = index % _spawn_markers.size()
+	var marker: Marker3D = _spawn_markers[marker_index]
 	if marker:
 		return marker.global_position
 	return Vector3(0.0, 1.1, -10.0 - float(index) * 2.5)
 
-func _cleanup_dead_enemies() -> void:
+func _compact_active_enemies() -> void:
 	var survivors: Array[Node3D] = []
 	for enemy in _active_enemies:
 		if is_instance_valid(enemy):
 			survivors.append(enemy)
+	if survivors.size() == _active_enemies.size():
+		return
 	_active_enemies = survivors
 	GameState.set_enemies_remaining(_active_enemies.size())
+
+func _cache_spawn_markers() -> void:
+	_spawn_markers.clear()
+	var marker_nodes: Array[Node] = get_tree().get_nodes_in_group("enemy_spawn")
+	for marker_node in marker_nodes:
+		if marker_node is Marker3D:
+			_spawn_markers.append(marker_node as Marker3D)
 
 func _on_enemy_tree_exited(enemy: Node3D) -> void:
 	_active_enemies.erase(enemy)

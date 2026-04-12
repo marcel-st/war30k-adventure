@@ -22,6 +22,7 @@ const PROJECTILE_SCENE: PackedScene = preload("res://scenes/enemies/SCN_EnemyPro
 @onready var body_mesh: MeshInstance3D = $VisualRoot/BodyMesh
 @onready var awareness_area: Area3D = $Awareness
 @onready var muzzle: Marker3D = $VisualRoot/WeaponMesh/Muzzle
+@onready var projectile_pool: Node = GameState.get_node_or_null("ProjectilePool")
 
 var gravity: float = 24.0
 var health: float = 45.0
@@ -99,6 +100,18 @@ func _try_ranged_attack() -> void:
 	if target_player == null or not is_instance_valid(target_player):
 		return
 	attack_timer = attack_cooldown
+	if projectile_pool == null:
+		projectile_pool = GameState.get_node_or_null("ProjectilePool")
+	if projectile_pool and projectile_pool.has_method("spawn_enemy_projectile"):
+		var direction: Vector3 = (target_player.global_position + Vector3.UP * 0.8 - muzzle.global_position).normalized()
+		projectile_pool.spawn_enemy_projectile(
+			muzzle.global_position,
+			direction,
+			projectile_speed,
+			attack_damage,
+			self
+		)
+		return
 	var projectile: Node3D = PROJECTILE_SCENE.instantiate()
 	projectile.global_position = muzzle.global_position
 	projectile.look_at(target_player.global_position + Vector3.UP * 0.8, Vector3.UP)
