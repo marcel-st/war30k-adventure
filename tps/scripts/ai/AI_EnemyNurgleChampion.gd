@@ -25,6 +25,8 @@ var attack_timer: float = 0.0
 var tracked_player: CharacterBody3D = null
 var _hit_flash_timer: float = 0.0
 var _is_commander_active: bool = false
+var _far_update_timer: float = 0.0
+var _far_update_mode: bool = false
 
 func _ready() -> void:
 	gravity = ProjectSettings.get_setting("physics/3d/default_gravity", 24.0) * gravity_scale
@@ -42,6 +44,20 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
+	if _far_update_mode:
+		_far_update_timer = maxf(0.0, _far_update_timer - delta)
+		if _far_update_timer > 0.0:
+			return
+		_far_update_timer = 0.11
+	elif _can_engage_player():
+		var dist_to_player: float = global_position.distance_to(tracked_player.global_position)
+		if dist_to_player > 30.0:
+			_far_update_timer = maxf(0.0, _far_update_timer - delta)
+			if _far_update_timer > 0.0:
+				return
+			_far_update_timer = 0.12
+	else:
+		_far_update_timer = 0.0
 
 	attack_timer = maxf(0.0, attack_timer - delta)
 	_update_hit_flash(delta)
@@ -151,3 +167,6 @@ func _on_command_aura_body_exited(body: Node) -> void:
 		return
 	if body.has_method("set_commander_aura_bonus"):
 		body.set_commander_aura_bonus(1.0)
+
+func set_far_update_mode(enabled: bool) -> void:
+	_far_update_mode = enabled

@@ -1,44 +1,62 @@
 extends Node3D
 
-@export var mouse_sensitivity := 0.0025
-@export var stick_sensitivity := 2.2
-@export var min_pitch_deg := -55.0
-@export var max_pitch_deg := 65.0
-@export var default_arm_length := 4.4
-@export var aim_arm_length := 2.2
-@export var default_fov := 75.0
-@export var aim_fov := 58.0
-@export var transition_speed := 10.0
+@export var mouse_sensitivity: float = 0.0025
+@export var stick_sensitivity: float = 2.2
+@export var min_pitch_deg: float = -55.0
+@export var max_pitch_deg: float = 65.0
+@export var default_arm_length: float = 4.4
+@export var aim_arm_length: float = 2.2
+@export var default_fov: float = 75.0
+@export var aim_fov: float = 58.0
+@export var transition_speed: float = 10.0
 
 @onready var _pitch: Node3D = $Pivot
 @onready var _spring_arm: SpringArm3D = $Pivot/SpringArm3D
 @onready var _camera: Camera3D = $Pivot/SpringArm3D/Camera3D
 
-var _pitch_radians := 0.0
+var _pitch_radians: float = 0.0
 var _is_aiming: bool = false
 var _impact_shake_timer: float = 0.0
 var _impact_shake_strength: float = 0.0
+var _look_accel_state: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
 	_pitch_radians = _pitch.rotation.x
+	if SettingsSystem and SettingsSystem.has_method("get_setting"):
+		mouse_sensitivity = float(SettingsSystem.get_setting("mouse_sensitivity", mouse_sensitivity))
+		stick_sensitivity = float(SettingsSystem.get_setting("stick_sensitivity", stick_sensitivity))
+		default_fov = float(SettingsSystem.get_setting("fov", default_fov))
+	if SettingsSystem and SettingsSystem.has_signal("settings_changed"):
+		SettingsSystem.settings_changed.connect(_on_settings_changed)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
 		apply_mouse_input(event.relative * mouse_sensitivity)
 
 func _process(delta: float) -> void:
-	var stick_look := Vector2(
+	var stick_look: Vector2 = Vector2(
 		Input.get_axis("look_left", "look_right"),
 		Input.get_axis("look_up", "look_down")
 	)
-	if stick_look.length() > 0.01:
-		rotation.y -= stick_look.x * stick_sensitivity * delta
+	var deadzone: float = 0.1
+	if SettingsSystem and SettingsSystem.has_method("get_setting"):
+		deadzone = float(SettingsSystem.get_setting("controller_look_deadzone", deadzone))
+	var accel: float = 8.0
+	if SettingsSystem and SettingsSystem.has_method("get_setting"):
+		accel = float(SettingsSystem.get_setting("look_acceleration", accel))
+	if stick_look.length() > deadzone:
+		var normalized_strength: float = clampf((stick_look.length() - deadzone) / maxf(0.001, 1.0 - deadzone), 0.0, 1.0)
+		var accel_input: Vector2 = stick_look.normalized() * normalized_strength
+		_look_accel_state = _look_accel_state.lerp(accel_input, clampf(accel * delta, 0.0, 1.0))
+		rotation.y -= _look_accel_state.x * stick_sensitivity * delta
 		_pitch_radians = clamp(
-			_pitch_radians + stick_look.y * stick_sensitivity * delta,
+			_pitch_radians + _look_accel_state.y * stick_sensitivity * delta,
 			deg_to_rad(min_pitch_deg),
 			deg_to_rad(max_pitch_deg)
 		)
 		_pitch.rotation.x = _pitch_radians
+	else:
+		_look_accel_state = _look_accel_state.lerp(Vector2.ZERO, clampf((accel + 2.0) * delta, 0.0, 1.0))
 
 	var aiming := _is_aiming or Input.is_action_pressed("aim")
 	var target_length := aim_arm_length if aiming else default_arm_length
@@ -67,6 +85,17 @@ func apply_stick_input(look_delta: Vector2) -> void:
 		deg_to_rad(max_pitch_deg)
 	)
 	_pitch.rotation.x = _pitch_radians
+
+func _on_settings_changed(setting_name: String, value: Variant) -> void:
+	match setting_name:
+		"mouse_sensitivity":
+			mouse_sensitivity = float(value)
+		"stick_sensitivity":
+			stick_sensitivity = float(value)
+		"fov":
+			default_fov = float(value)
+		_:
+			pass
 
 func get_move_basis() -> Basis:
 	# Movement is yaw-only so forward input remains stable on slopes.

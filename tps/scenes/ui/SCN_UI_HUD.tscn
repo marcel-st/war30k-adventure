@@ -73,3 +73,20 @@ text = "+"
 horizontal_alignment = 1
 vertical_alignment = 1
 theme_override_font_sizes/font_size = 30
+
+[node name="DamageIndicator" type="Label" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -74.0
+offset_right = 120.0
+offset_bottom = -34.0
+grow_horizontal = 2
+grow_vertical = 2
+text = ""
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 24
+modulate = Color(1, 0.32, 0.28, 0)

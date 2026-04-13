@@ -19,8 +19,19 @@
           "objective_id": "no_deaths_clear",
           "description": "Complete the run without dying.",
           "reward_key": "objective_optional"
+        },
+        {
+          "objective_id": "relay_sabotage",
+          "description": "Channel and sabotage a traitor relay before extraction.",
+          "reward_key": "objective_optional"
         }
       ],
+      "mission_modes": ["assault", "sabotage"],
+      "sabotage_objective": {
+        "required_ticks": 8,
+        "enemy_gate": 2,
+        "radius": 4.2
+      },
       "branch_consequences": {
         "ops_tone": {
           "hold_the_line": {

@@ -50,10 +50,14 @@ var ability_cooldowns: Dictionary = {
 var ability_order: Array[String] = ["resilience_surge", "toxic_grenade", "rally_command"]
 var commander_controller: Node = null
 var branch_choices: Dictionary = {}
+var _enemy_throttle_cursor: int = 0
 
 func _ready() -> void:
 	_setup_default_input_actions()
 	reset_run()
+
+func _process(_delta: float) -> void:
+	_tick_enemy_lod_updates()
 
 func reset_run() -> void:
 	health = MAX_HEALTH
@@ -70,6 +74,7 @@ func reset_run() -> void:
 	story_chapter_id = "ch1"
 	story_chapter_title = "Drop Site Aftermath"
 	branch_choices.clear()
+	_enemy_throttle_cursor = 0
 	player_level = max(1, player_level)
 	_reset_ability_cooldowns()
 	emit_player_stats()
@@ -374,6 +379,46 @@ func _xp_threshold_for_level(level: int) -> int:
 func _reset_ability_cooldowns() -> void:
 	for ability in ability_order:
 		ability_cooldowns[ability] = 0.0
+
+func _tick_enemy_lod_updates() -> void:
+	var current_scene: Node = get_tree().current_scene
+	if current_scene == null:
+		return
+	var enemies: Array[Node] = get_tree().get_nodes_in_group("enemy")
+	if enemies.is_empty():
+		return
+	var player: Node3D = current_scene.get_node_or_null("Player") as Node3D
+	if player == null:
+		return
+	var budget: int = mini(8, enemies.size())
+	for _step in range(budget):
+		if enemies.is_empty():
+			return
+		_enemy_throttle_cursor = _enemy_throttle_cursor % enemies.size()
+		var enemy_node: Node = enemies[_enemy_throttle_cursor]
+		_enemy_throttle_cursor += 1
+		if not (enemy_node is Node3D):
+			continue
+		var enemy_3d: Node3D = enemy_node as Node3D
+		if not is_instance_valid(enemy_3d):
+			continue
+		if not enemy_3d.has_method("set_far_update_mode"):
+			continue
+		var is_far: bool = enemy_3d.global_position.distance_to(player.global_position) > 24.0
+		enemy_3d.call("set_far_update_mode", is_far)
+
+func set_run_meta(key: String, value: Variant) -> void:
+	if key == "":
+		return
+	set_meta("run_%s" % key, value)
+
+func get_run_meta(key: String, fallback: Variant = null) -> Variant:
+	if key == "":
+		return fallback
+	var scoped_key: String = "run_%s" % key
+	if has_meta(scoped_key):
+		return get_meta(scoped_key)
+	return fallback
 
 func get_mission_profile(profile_id: String) -> Dictionary:
 	var combat_data: Node = get_node_or_null("CombatData")

@@ -31,6 +31,7 @@ var _hazard_resist_timer: float = 0.0
 var _move_buff_bonus: float = 0.0
 var _move_buff_timer: float = 0.0
 var _footstep_timer: float = 0.0
+var _last_hit_direction_local: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -97,12 +98,6 @@ func _process_movement(delta: float) -> void:
 		_footstep_timer = 0.24 if Input.is_action_pressed("sprint") else 0.34
 
 func _process_aim_rotation(delta: float) -> void:
-	var look_input: Vector2 = Vector2.ZERO
-	look_input.x = Input.get_action_strength("look_right") - Input.get_action_strength("look_left")
-	look_input.y = Input.get_action_strength("look_down") - Input.get_action_strength("look_up")
-	if look_input.length_squared() > 0.0001:
-		camera_aim.apply_stick_input(look_input * joy_look_sensitivity * delta)
-
 	var move_vector: Vector3 = Vector3(velocity.x, 0.0, velocity.z)
 	if move_vector.length_squared() > 0.01:
 		var target_yaw: float = atan2(move_vector.x, move_vector.z)
@@ -124,15 +119,25 @@ func _process_combat() -> void:
 	_ability_speed_multiplier = AbilitySystem.get_move_speed_multiplier()
 	current_combat_move_speed_multiplier *= _ability_speed_multiplier
 
-func apply_damage(raw_damage: float, _source_position: Vector3 = Vector3.ZERO) -> void:
+func apply_damage(raw_damage: float, source_position: Vector3 = Vector3.ZERO) -> void:
 	if raw_damage <= 0.0 or health <= 0.0:
 		return
 	if EventBus and EventBus.has_method("emit_event"):
 		EventBus.emit_event("combat.player_hit", {"damage": raw_damage, "position": global_position})
 	var mitigated_damage: float = raw_damage * (1.0 - _damage_reduction_ratio)
-	var absorbed: float = min(armor, mitigated_damage * 0.65)
+	var absorb_multiplier: float = 1.0
+	var progression: Node = GameState.get_node_or_null("Progression")
+	if progression and progression.has_method("get_armor_absorb_multiplier"):
+		absorb_multiplier = float(progression.get_armor_absorb_multiplier())
+	var absorbed: float = min(armor, mitigated_damage * 0.65 * absorb_multiplier)
 	armor -= absorbed
 	health = max(0.0, health - (mitigated_damage - absorbed))
+	if source_position == Vector3.ZERO:
+		source_position = global_position - global_basis.z * 2.0
+	var hit_direction_world: Vector3 = (source_position - global_position)
+	hit_direction_world.y = 0.0
+	if hit_direction_world.length_squared() > 0.0001:
+		_last_hit_direction_local = global_basis.inverse() * hit_direction_world.normalized()
 	_hit_reaction_timer = 0.12
 	_hit_reaction_amount = minf(1.0, _hit_reaction_amount + 0.65)
 	camera_aim.add_impact_shake(0.8)
@@ -141,6 +146,9 @@ func apply_damage(raw_damage: float, _source_position: Vector3 = Vector3.ZERO) -
 	GameState.emit_player_stats()
 	if health <= 0.0:
 		GameState.mark_mission_failed()
+
+func get_last_hit_direction_local() -> Vector3:
+	return _last_hit_direction_local
 
 func apply_damage_from_hazard(raw_damage: float, source_position: Vector3 = Vector3.ZERO) -> void:
 	var mitigated: float = raw_damage * (1.0 - _hazard_resist_ratio)

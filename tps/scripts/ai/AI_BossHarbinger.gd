@@ -1,6 +1,8 @@
 extends CharacterBody3D
 
 signal died(enemy: Node3D)
+signal counter_window_opened(window_name: String)
+signal counter_window_closed(window_name: String, exploited: bool)
 
 @export var max_health: float = 450.0
 @export var move_speed: float = 2.4
@@ -33,6 +35,10 @@ var _nova_windup_timer: float = 0.0
 var _pending_strike: bool = false
 var _pending_nova: bool = false
 var _telegraph_display_timer: float = 0.0
+var _counter_window_timer: float = 0.0
+var _stagger_resistance: float = 0.0
+var _last_counter_window_name: String = ""
+var _counter_window_exploited: bool = false
 
 func _ready() -> void:
 	gravity = ProjectSettings.get_setting("physics/3d/default_gravity", 24.0) * gravity_scale
@@ -51,6 +57,8 @@ func _physics_process(delta: float) -> void:
 		return
 	strike_timer = maxf(0.0, strike_timer - delta)
 	nova_timer = maxf(0.0, nova_timer - delta)
+	_counter_window_timer = maxf(0.0, _counter_window_timer - delta)
+	_stagger_resistance = maxf(0.0, _stagger_resistance - delta)
 	_tick_attack_windups(delta)
 	_apply_gravity(delta)
 	_update_phase()
@@ -79,10 +87,14 @@ func apply_damage(raw_damage: float) -> void:
 	if is_dead or raw_damage <= 0.0:
 		return
 	var reduction: float = 1.0 - (0.06 * float(_phase - 1))
+	if _stagger_resistance > 0.0:
+		reduction *= 0.72
 	health = maxf(0.0, health - raw_damage * reduction)
 	if body_mesh:
 		var flash_scale: float = 1.08 + (0.02 * float(_phase))
 		body_mesh.scale = Vector3(flash_scale, 0.9, flash_scale)
+	if _counter_window_timer > 0.0 and (_pending_strike or _pending_nova):
+		_interrupt_active_attack()
 	if health <= 0.0:
 		_die()
 
@@ -105,6 +117,12 @@ func _try_strike_attack() -> void:
 	strike_timer = maxf(0.6, strike_cooldown - 0.15 * float(_phase - 1))
 	_pending_strike = true
 	_strike_windup_timer = maxf(0.22, 0.45 - 0.05 * float(_phase - 1))
+	_counter_window_timer = maxf(0.12, _strike_windup_timer * 0.45)
+	_counter_window_timer *= clampf(1.0 / maxf(0.6, _phase), 0.5, 1.0)
+	_stagger_resistance = _strike_windup_timer
+	_last_counter_window_name = "strike"
+	_counter_window_exploited = false
+	emit_signal("counter_window_opened", _last_counter_window_name)
 	_set_telegraph_state(Color(1.0, 0.56, 0.22, 0.85), 1.35)
 	GameState.push_event_message("Harbinger winds up a crushing strike!")
 	if EventBus:
@@ -120,6 +138,12 @@ func _try_nova_attack(distance_to_player: float) -> void:
 	nova_timer = maxf(2.8, nova_cooldown - 0.3 * float(_phase - 1))
 	_pending_nova = true
 	_nova_windup_timer = maxf(0.55, 1.0 - 0.08 * float(_phase - 1))
+	_counter_window_timer = maxf(0.16, _nova_windup_timer * 0.38)
+	_counter_window_timer *= clampf(1.0 / maxf(0.6, _phase), 0.5, 1.0)
+	_stagger_resistance = _nova_windup_timer
+	_last_counter_window_name = "nova"
+	_counter_window_exploited = false
+	emit_signal("counter_window_opened", _last_counter_window_name)
 	_set_telegraph_state(Color(0.44, 1.0, 0.35, 0.82), 2.2)
 	GameState.push_event_message("Harbinger channels plague nova!")
 	if EventBus:
@@ -196,6 +220,10 @@ func _tick_attack_windups(delta: float) -> void:
 		_hide_telegraph()
 
 func _resolve_strike() -> void:
+	if _last_counter_window_name == "strike":
+		emit_signal("counter_window_closed", "strike", _counter_window_exploited)
+		_last_counter_window_name = ""
+		_counter_window_exploited = false
 	_telegraph_display_timer = 0.18
 	_set_telegraph_state(Color(1.0, 0.16, 0.14, 0.9), 1.8)
 	if tracked_player and tracked_player.has_method("apply_damage"):
@@ -203,6 +231,10 @@ func _resolve_strike() -> void:
 	GameState.push_event_message("Harbinger strike impact!")
 
 func _resolve_nova() -> void:
+	if _last_counter_window_name == "nova":
+		emit_signal("counter_window_closed", "nova", _counter_window_exploited)
+		_last_counter_window_name = ""
+		_counter_window_exploited = false
 	_telegraph_display_timer = 0.24
 	_set_telegraph_state(Color(0.72, 1.0, 0.3, 0.95), 2.6)
 	if tracked_player and tracked_player.has_method("apply_damage"):
@@ -230,3 +262,19 @@ func _hide_telegraph() -> void:
 		strike_telegraph.visible = false
 	if nova_telegraph:
 		nova_telegraph.visible = false
+
+func _interrupt_active_attack() -> void:
+	_pending_strike = false
+	_pending_nova = false
+	_strike_windup_timer = 0.0
+	_nova_windup_timer = 0.0
+	_counter_window_timer = 0.0
+	_counter_window_exploited = true
+	_stagger_resistance = 0.0
+	_hide_telegraph()
+	if _last_counter_window_name != "":
+		emit_signal("counter_window_closed", _last_counter_window_name, true)
+		_last_counter_window_name = ""
+	GameState.push_event_message("Counter-hit! Harbinger attack interrupted.")
+	if EventBus:
+		EventBus.emit_event("combat.hit_confirmed", {"weapon_id": "counter_window", "damage": 0.0})

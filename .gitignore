@@ -4,6 +4,8 @@ build/
 *.so
 *.a
 *.out
+dist/
+tools/
 
 # Godot TPS project artifacts
 tps/.godot/
