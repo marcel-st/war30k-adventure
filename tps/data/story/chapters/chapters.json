@@ -1,0 +1,32 @@
+{
+  "chapters": [
+    {
+      "chapter_id": "ch1_drop_site_aftermath",
+      "title": "Chapter I: Drop Site Aftermath",
+      "summary": "The loyalist Death Guard survivors of Isstvan regroup under traitor pressure and force a path to extraction.",
+      "intro_cutscene": "res://data/story/cutscenes/ch1_intro.json",
+      "contacts_file": "res://data/story/dialogues/contacts_ch1.json"
+    },
+    {
+      "chapter_id": "ch2_warp_transit_crisis",
+      "title": "Chapter II: Warp Transit Crisis",
+      "summary": "Warp turbulence and sabotage threaten the warning run while loyalists hold the corridor by attrition.",
+      "intro_cutscene": "res://data/story/cutscenes/ch2_intro.json",
+      "contacts_file": "res://data/story/dialogues/contacts_ch2.json"
+    },
+    {
+      "chapter_id": "ch3_blockade_breach",
+      "title": "Chapter III: Blockade Breach",
+      "summary": "A traitor interdiction ring closes near Luna; the strike element clears the relay approach by force.",
+      "intro_cutscene": "res://data/story/cutscenes/ch3_intro.json",
+      "contacts_file": "res://data/story/dialogues/contacts_ch3.json"
+    },
+    {
+      "chapter_id": "ch4_terra_relay",
+      "title": "Chapter IV: Terra Relay",
+      "summary": "Final transmission window: secure the relay and broadcast the warning before collapse.",
+      "intro_cutscene": "res://data/story/cutscenes/ch4_intro.json",
+      "contacts_file": "res://data/story/dialogues/contacts_ch4.json"
+    }
+  ]
+}

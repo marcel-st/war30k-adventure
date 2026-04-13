@@ -1,0 +1,16 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/STY_StorySystemsRoot.gd" id="1_root"]
+[ext_resource type="Script" path="res://scripts/story/STY_StoryManager.gd" id="1_mgr"]
+[ext_resource type="PackedScene" path="res://scenes/cutscenes/SCN_CutsceneDirector.tscn" id="4_cutscene_scene"]
+[ext_resource type="PackedScene" path="res://scenes/story/SCN_UI_Dialogue.tscn" id="5_dialogue_scene"]
+
+[node name="StorySystems" type="Node"]
+script = ExtResource("1_root")
+
+[node name="StoryManager" type="Node" parent="."]
+script = ExtResource("1_mgr")
+
+[node name="CutsceneDirector" parent="." instance=ExtResource("4_cutscene_scene")]
+
+[node name="DialogueUI" parent="." instance=ExtResource("5_dialogue_scene")]

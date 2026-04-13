@@ -1,0 +1,22 @@
+{
+  "contacts": [
+    {
+      "contact_id": "ch2_contact_hest",
+      "title": "Vox-Magos Distress",
+      "lines": [
+        {
+          "speaker": "Vox-Magos Hest",
+          "text": "Warp-static is tearing the relay loops apart. We have minutes before total silence."
+        },
+        {
+          "speaker": "Loyalist Captain",
+          "text": "Then every minute is ours. Stabilize one mast and we drive the warning through it."
+        },
+        {
+          "speaker": "Vox-Magos Hest",
+          "text": "A traitor cipher was found in maintenance channels. Saboteurs are onboard and moving for the relays."
+        }
+      ]
+    }
+  ]
+}

@@ -36,6 +36,27 @@ The repository now also includes an in-progress 3D third-person shooter foundati
 
 Current status: this is a **vertical-slice scaffold**, not a full content-complete game yet.
 
+## TPS Narrative Systems (New)
+
+The Godot TPS slice now includes a first-pass story runtime:
+
+- Four chapter arc data (`tps/data/story/chapters/chapters.json`):
+  - Chapter I: Drop Site Aftermath
+  - Chapter II: Warp Transit Crisis
+  - Chapter III: Blockade Breach
+  - Chapter IV: Terra Relay
+- Chapter intro cutscenes with skippable camera-shot timelines.
+- Contact moments via NPC interaction and mission-scripted calls.
+- In-world contact actors with interaction prompts.
+- Story subtitle/event feed integration into HUD.
+
+### Narrative + Interaction Controls (TPS)
+
+- Interact/contact: `E` or gamepad `A`
+- Advance dialogue: `Enter`, mouse left-click, or gamepad `A` / `RB`
+- Skip/close dialogue: `Esc` or gamepad `B` / `Start`
+- Skip cutscene: `Esc` or gamepad `B` / `Start`
+
 ## Story Campaign
 
 1. **Isstvan V – Broken Loyalty**

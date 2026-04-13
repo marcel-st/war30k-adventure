@@ -1,0 +1,28 @@
+{
+  "abilities": [
+    {
+      "ability_id": "resilience_surge",
+      "display_name": "Resilience Surge",
+      "duration": 6.0,
+      "cooldown": 20.0,
+      "damage_reduction": 0.28,
+      "speed_multiplier": 1.06
+    },
+    {
+      "ability_id": "toxic_blast",
+      "display_name": "Toxic Blast",
+      "duration": 8.0,
+      "cooldown": 16.0,
+      "tick_damage": 4.5,
+      "radius": 4.5
+    },
+    {
+      "ability_id": "rally_command",
+      "display_name": "Rally Command",
+      "duration": 10.0,
+      "cooldown": 24.0,
+      "damage_multiplier": 1.2,
+      "reload_speed_multiplier": 1.22
+    }
+  ]
+}

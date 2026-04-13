@@ -1,0 +1,39 @@
+{
+  "chapter_id": "ch1_drop_site_aftermath",
+  "contacts": [
+    {
+      "contact_id": "ch1_contact_macer",
+      "display_name": "Macer Varren",
+      "title": "Macer Varren Briefing",
+      "lines": [
+        {
+          "speaker": "Macer Varren",
+          "text": "Captain, traitor squads are sweeping left-to-right through the trench lane."
+        },
+        {
+          "speaker": "Death Guard Captain",
+          "text": "Then we make them pay by meters. Hold this ground until extraction unlocks."
+        },
+        {
+          "speaker": "Macer Varren",
+          "text": "Understood. I will relay marks to every loyalist still breathing."
+        }
+      ]
+    },
+    {
+      "contact_id": "ch1_contact_ignatius",
+      "display_name": "Intercepted Vox",
+      "title": "Intercepted Vox Warning",
+      "lines": [
+        {
+          "speaker": "Vox Relay",
+          "text": "Encrypted burst from a former brother: heavy reinforcements are inbound."
+        },
+        {
+          "speaker": "Death Guard Captain",
+          "text": "We are not former anything. We are the line. Prepare to receive impact."
+        }
+      ]
+    }
+  ]
+}

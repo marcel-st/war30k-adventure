@@ -15,13 +15,15 @@ signal died(enemy: Node3D)
 @export var corpse_lifetime: float = 2.2
 @export var hit_react_duration: float = 0.12
 @export var hit_react_knockback: float = 2.1
+@export var enemy_role: String = "suppressor"
 
 const PROJECTILE_SCENE: PackedScene = preload("res://scenes/enemies/SCN_EnemyProjectile.tscn")
 
 @onready var visual_root: Node3D = $VisualRoot
 @onready var body_mesh: MeshInstance3D = $VisualRoot/BodyMesh
 @onready var awareness_area: Area3D = $Awareness
-@onready var muzzle: Marker3D = $VisualRoot/Muzzle
+@onready var muzzle: Marker3D = $VisualRoot/WeaponMesh/Muzzle
+@onready var projectile_pool: Node = GameState.get_node_or_null("ProjectilePool")
 
 var gravity: float = 24.0
 var health: float = 45.0
@@ -29,10 +31,16 @@ var is_dead: bool = false
 var attack_timer: float = 0.0
 var hit_react_timer: float = 0.0
 var tracked_player: CharacterBody3D = null
+var _role_profile: Dictionary = {}
 
 func _ready() -> void:
 	gravity = ProjectSettings.get_setting("physics/3d/default_gravity", 24.0) * gravity_scale
 	health = max_health
+	_role_profile = GameState.get_enemy_role_profile(enemy_role)
+	if not _role_profile.is_empty():
+		ideal_range = float(_role_profile.get("preferred_range", ideal_range))
+		retreat_range = maxf(2.0, ideal_range * 0.55)
+		attack_cooldown = float(_role_profile.get("shoot_interval", attack_cooldown))
 	var awareness_shape: CollisionShape3D = awareness_area.get_node_or_null("CollisionShape3D") as CollisionShape3D
 	if awareness_shape and awareness_shape.shape is SphereShape3D:
 		(awareness_shape.shape as SphereShape3D).radius = detection_radius
@@ -99,6 +107,18 @@ func _try_ranged_attack() -> void:
 	if target_player == null or not is_instance_valid(target_player):
 		return
 	attack_timer = attack_cooldown
+	if projectile_pool == null:
+		projectile_pool = GameState.get_node_or_null("ProjectilePool")
+	if projectile_pool and projectile_pool.has_method("spawn_enemy_projectile"):
+		var direction: Vector3 = (target_player.global_position + Vector3.UP * 0.8 - muzzle.global_position).normalized()
+		projectile_pool.spawn_enemy_projectile(
+			muzzle.global_position,
+			direction,
+			projectile_speed,
+			attack_damage,
+			self
+		)
+		return
 	var projectile: Node3D = PROJECTILE_SCENE.instantiate()
 	projectile.global_position = muzzle.global_position
 	projectile.look_at(target_player.global_position + Vector3.UP * 0.8, Vector3.UP)

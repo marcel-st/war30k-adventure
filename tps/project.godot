@@ -10,6 +10,13 @@ config/icon="res://icon.svg"
 [autoload]
 
 GameState="*res://scenes/systems/SCN_SYS_GameState.tscn"
+EventBus="*res://scripts/systems/SYS_EventBus.gd"
+DebugTools="*res://scripts/systems/SYS_DebugTools.gd"
+SettingsSystem="*res://scripts/systems/SYS_Settings.gd"
+QATools="*res://scripts/systems/SYS_QATools.gd"
+CombatData="*res://scripts/systems/SYS_CombatData.gd"
+AbilitySystem="*res://scripts/systems/SYS_AbilitySystem.gd"
+Progression="*res://scripts/systems/SYS_Progression.gd"
 
 [display]
 

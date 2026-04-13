@@ -1,0 +1,40 @@
+{
+  "contacts": [
+    {
+      "contact_id": "ch4_contact_relay",
+      "speaker": "Euphrati Keeler",
+      "lines": [
+        {
+          "speaker": "Euphrati Keeler",
+          "text": "The relay choir is ready, but traitor fire is collapsing the outer galleries."
+        },
+        {
+          "speaker": "Death Guard Captain",
+          "text": "We hold the chamber, then we transmit. Terra will hear the warning."
+        },
+        {
+          "speaker": "Euphrati Keeler",
+          "text": "Then stand fast. I will carry the words if you carry the line."
+        }
+      ]
+    },
+    {
+      "contact_id": "ch4_contact_malcador",
+      "speaker": "Sigillite Relay",
+      "lines": [
+        {
+          "speaker": "Malcador",
+          "text": "Signal strength unstable. You have a narrow window, captain."
+        },
+        {
+          "speaker": "Death Guard Captain",
+          "text": "Window or no, the message will be delivered."
+        },
+        {
+          "speaker": "Malcador",
+          "text": "Then endure. Terra braces for the storm you have named."
+        }
+      ]
+    }
+  ]
+}

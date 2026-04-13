@@ -1,0 +1,52 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/npc/NPC_ContactActor.gd" id="1_npc"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_npc"]
+radius = 0.38
+height = 0.9
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_npc"]
+radius = 0.38
+height = 0.9
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_npc"]
+albedo_color = Color(0.62, 0.61, 0.55, 1)
+metallic = 0.18
+roughness = 0.74
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_interact"]
+radius = 2.6
+
+[sub_resource type="LabelSettings" id="LabelSettings_prompt"]
+font_size = 16
+font_color = Color(0.85098, 0.882353, 0.937255, 1)
+outline_size = 2
+outline_color = Color(0.0313726, 0.0392157, 0.0470588, 0.95)
+
+[node name="NPC_ContactActor" type="CharacterBody3D"]
+script = ExtResource("1_npc")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CapsuleShape3D_npc")
+position = Vector3(0, 0.9, 0)
+
+[node name="VisualRoot" type="Node3D" parent="."]
+
+[node name="BodyMesh" type="MeshInstance3D" parent="VisualRoot"]
+mesh = SubResource("CapsuleMesh_npc")
+position = Vector3(0, 0.9, 0)
+surface_material_override/0 = SubResource("StandardMaterial3D_npc")
+
+[node name="InteractArea" type="Area3D" parent="."]
+collision_layer = 0
+collision_mask = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractArea"]
+shape = SubResource("SphereShape3D_interact")
+
+[node name="PromptLabel" type="Label3D" parent="."]
+position = Vector3(0, 2.05, 0)
+billboard = 1
+text = "Press E / A to contact"
+pixel_size = 0.0028
