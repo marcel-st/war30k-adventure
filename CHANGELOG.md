@@ -2,6 +2,38 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.7.0] - 2026-04-12
+
+### Added
+- Godot TPS audio stack:
+  - `tps/scripts/systems/SYS_AudioManager.gd` autoload for music/SFX/UI buses and event routing.
+  - Licensed third-party music and SFX packs under `tps/assets/audio/`.
+  - Audio provenance and license documentation:
+    - `tps/audio/ASSET_MANIFEST.json`
+    - `tps/audio/THIRD_PARTY_AUDIO_LICENSES.md`
+- Story and mission extension systems:
+  - Multi-chapter story runtime, dialogue, and cutscene directors.
+  - Branch-choice propagation into mission pacing/consequence logic.
+  - Mission profile data (`tps/data/missions/mission_profiles.json`) for adaptive/balance tuning.
+
+### Changed
+- Merged the full TPS branch history into `main`:
+  - `cursor/initial-setup-7401`
+  - `cursor/narrative-campaign-7401`
+  - `cursor/quality-sprint-7401`
+- Expanded TPS gameplay systems on main:
+  - Boss telegraphs and phase pressure tuning.
+  - Ability physicalization (`toxic_grenade` hazard area, damage reduction/buffs).
+  - Progression HUD line (level/xp/requisition) and profile-linked reward flow.
+  - Adaptive mission director and branch-dependent wave composition.
+- Updated settings defaults to use linear audio controls (`master_volume`, `music_volume`, `sfx_volume`) for easier runtime scaling and persistence.
+
+### Fixed
+- Eliminated headless validation regressions from audio script loading:
+  - Removed legacy preload/runtime handler mismatch path.
+  - Added headless-safe audio manager behavior to avoid audio resource teardown errors in smoke runs.
+- Resolved multiple TPS runtime integration issues previously tracked in branch commits (enemy muzzle paths, profile wiring, duplicate function definitions, autoload usage consistency).
+
 ## [0.6.0] - 2026-03-22
 
 ### Added

@@ -4,160 +4,58 @@
 
 ![War30K Mark](docs/images/logo-mark.svg)
 
-Linux-native top-down action-adventure RPG prototype in C++/SDL2.
+WAR30K Adventure currently contains two playable development tracks in one repository:
 
-You play as Nathaniel Garro during the Horus Heresy, surviving Isstvan V, crossing the warp, breaking the Luna approach blockade, and reaching Terra to deliver warning of Horus' betrayal.
+1. A Linux-native C++/SDL2 top-down action-adventure prototype.
+2. A Godot 4 third-person shooter vertical slice (`tps/`) focused on a loyalist Death Guard fantasy during the Horus Heresy.
 
-## Gameplay Overview
+## Current Project Status
 
-- Genre: top-down action-adventure (classic 16-bit style flow)
-- Platform target: Linux
-- Input: keyboard + game controller
-- Campaign: 4 connected story stages with objectives and narrative panels
-- Combat: melee attack arc + enemy ranged projectiles
-- Combat: Player sword swing arc with knockback-driven hit response
-- Tactical UI: objective tracking, HP HUD, and minimap
-- Animation: retro sprite-entity pipeline with ALttP-style 2-frame movement cadence
-- Player system: ALttP-style 4-direction sprite state (`Up/Down/Left/Right`) and sword state
-- Enemy AI: Zelda-style wander + aggro behavior with distance-triggered pursuit
-- Rendering depth: Y-sorted character draw order for top-down overlap correctness
-- Visual FX: daemon sine-wave hover/floating and marine torso bob while walking
-- Mission flow: briefing auto-starts gameplay on movement input + safe mission spawn fallback
+### SDL2 top-down prototype (legacy track)
 
-## TPS Migration Track (Godot 4)
+- 4-stage campaign structure and objective flow.
+- Retro sprite rendering and ALttP-inspired movement/cadence.
+- Melee + projectile pressure combat loop.
+- Minimap, objective UI, and mission-state flow.
 
-The repository now also includes an in-progress 3D third-person shooter foundation in `tps/`.
+### Godot TPS vertical slice (active migration track)
 
-- Engine: Godot 4.x (Forward+ renderer)
-- Perspective: third-person shoulder camera with aim zoom
-- Player fantasy: Death Guard loyalist-style space marine (30K palette/material direction)
-- Combat loop (prototype): movement, aiming, hitscan boltgun fire, reload, extraction objective trigger
-- HUD: health, armor, ammo, and objective state
+- Third-person locomotion, aim camera, sprint, hitscan boltgun, reload.
+- Wave mission controller with mixed enemy archetypes and reinforcements.
+- Boss encounter with attack telegraphs and multi-phase behavior.
+- Story layer with chapter intros, NPC contacts, dialogue UI, and cutscene flow.
+- Ability kit (`resilience_surge`, `toxic_grenade`, `rally_command`) with cooldowns and physicalized gameplay effects.
+- Adaptive mission director + branch consequence hooks.
+- Progression hooks (level/xp/requisition) and HUD integration.
+- Audio runtime via autoloaded `AudioManager`:
+  - combat SFX, UI SFX, footsteps, boss cues
+  - layered ambience
+  - hard-rock combat tracks and intermission rock ballad transitions
 
-Current status: this is a **vertical-slice scaffold**, not a full content-complete game yet.
-
-## TPS Narrative Systems (New)
-
-The Godot TPS slice now includes a first-pass story runtime:
-
-- Four chapter arc data (`tps/data/story/chapters/chapters.json`):
-  - Chapter I: Drop Site Aftermath
-  - Chapter II: Warp Transit Crisis
-  - Chapter III: Blockade Breach
-  - Chapter IV: Terra Relay
-- Chapter intro cutscenes with skippable camera-shot timelines.
-- Contact moments via NPC interaction and mission-scripted calls.
-- In-world contact actors with interaction prompts.
-- Story subtitle/event feed integration into HUD.
-
-### Narrative + Interaction Controls (TPS)
-
-- Interact/contact: `E` or gamepad `A`
-- Advance dialogue: `Enter`, mouse left-click, or gamepad `A` / `RB`
-- Skip/close dialogue: `Esc` or gamepad `B` / `Start`
-- Skip cutscene: `Esc` or gamepad `B` / `Start`
-
-## Story Campaign
-
-1. **Isstvan V – Broken Loyalty**
-	- Escape the Drop Site massacre and reach extraction.
-2. **Warp Crossing – The Eisenstein**
-	- Stabilize warp wards by activating beacon relics.
-3. **Luna Approach – Blockade Run**
-	- Purge traitor boarding forces to open a corridor.
-4. **Terra – The Warning**
-	- Reach the relay and send warning to the Emperor.
-
-## Screenshots / Images
-
-![Gameplay - Isstvan V](docs/images/gameplay-istvaan.svg)
-
-_Current build: Garro sword arc strike with knockback response, projectile pressure, and active minimap contacts._
-
-![Gameplay - Terra](docs/images/gameplay-terra.svg)
-
-_Current build: Y-sorted retro sprites, daemon float shimmer, and objective relay approach under fire._
-
-## Controls
-
-### Keyboard
-
-- Move: `W A S D` or Arrow Keys
-- Attack: `Space` or `J`
-- Interact / Continue: `E` or `Enter`
-- Restart after win/loss: `R`
-- Quit: `Esc`
-
-### Controller
-
-- Move: Left Stick
-- Attack: `A` (or Right Trigger)
-- Interact / Continue: `X` or `B`
-
-## Tech Stack
-
-- Language: C++17
-- Rendering/Input: SDL2
-- Build system: CMake
-
-## Modular Project Structure
+## Repository Layout
 
 ```text
-include/
-  animated_sprite.hpp    # JSON spritesheet animator with setAnimation(state, direction)
-  core_types.hpp        # Shared constants, data structs, enums, math signatures
-  enemy.hpp             # Enemy base class, Zelda-style AI, palette swaps, knockback
-  font.hpp              # Bitmap font interface
-  player.hpp            # Garro player class with SpriteState and sword arc collision
-  sprite_system.hpp     # Retro sprite entities (SpaceMarine/WarpDaemon) + Y-sort
-  world.hpp             # Stages, map generation, collision
-  render.hpp            # Sprite/tile/minimap rendering
-  game.hpp              # Game class interface
-
-src/
-  main.cpp              # Thin launcher
-  game.cpp              # Core loop, state machine, gameplay systems
-  core/
-    animated_sprite.cpp # AnimatedSprite implementation (JSON + frame timing + motion overlays)
-    common.cpp          # Math + bitmap font implementation
-    enemy.cpp           # Enemy AI implementation (wander/aggro + knockback + palette)
-    player.cpp          # Player implementation (4-dir render + sword swing arc)
-    sprite_system.cpp   # Retro sprite entities, walking bob, daemon float, Y-sort utility
-    world.cpp           # Stage data + map/collision implementation
-    render.cpp          # Tile/sprite/minimap drawing implementation
-
-assets/
-  garro_sheet.bmp       # Procedural Garro spritesheet
-  garro_frames.json     # Garro frame definitions
-  sample_frames.json    # Generic sample frame map for sprite animation reference
-  traitor_sheet.bmp     # Procedural traitor spritesheet
-  traitor_frames.json   # Traitor frame definitions
-
-scripts/
-  generate_sheets.py    # Procedural spritesheet generator with edge highlights
+.
+├── include/                     # C++ headers (SDL2 track)
+├── src/                         # C++ source (SDL2 track)
+├── assets/                      # C++ track assets
+├── docs/                        # Root project docs/release notes
+└── tps/                         # Godot 4 TPS migration project
+    ├── assets/audio/            # Integrated runtime audio assets
+    ├── audio/                   # Audio source provenance + licenses
+    ├── data/                    # JSON gameplay/story/progression/config data
+    ├── scenes/                  # Godot scenes
+    ├── scripts/                 # GDScript runtime systems
+    └── docs/tps-migration/      # TPS migration design/runtime docs
 ```
 
-## Performance Notes (Modular + Fast)
-
-- Split into translation units to reduce incremental build time and improve code locality.
-- Data-oriented containers (`std::vector`) for enemies/projectiles/beacons.
-- `reserve()` used for hot-path entity vectors to reduce runtime reallocations.
-- Fixed-size tile grid with lightweight collision checks.
-- Frame delta clamping to avoid simulation spikes.
-- Animation work moved into dedicated module to reduce game-loop complexity.
-- Runtime enemy behavior moved to reusable Enemy base classes.
-- Y-sorted sprite entity rendering improves overlap correctness without heavy scene graph cost.
-- Knockback overlap resolution prevents enemy/player collision stacking.
-- Rendering combines tile primitives with sprite-sheet blits for low overhead.
-
-## Linux Setup
+## Build and Run (SDL2)
 
 ### Dependencies
 
-- `g++` or `clang++` with C++17 support
+- C++17 compiler (`g++` or `clang++`)
 - `cmake` (3.16+)
 - SDL2 development package
-- Godot 4.x editor/runtime (for TPS track)
 
 Debian/Ubuntu example:
 
@@ -166,93 +64,56 @@ sudo apt-get update
 sudo apt-get install -y build-essential cmake libsdl2-dev
 ```
 
-## Build
+Build and run:
 
 ```bash
 cmake -S . -B build
 cmake --build build -j
-```
-
-### Run SDL2 Prototype
-
-```bash
 ./build/war30k_adventure
 ```
 
-### Run TPS Scaffold (Godot 4)
+## Run (Godot TPS)
+
+Install Godot 4.x, then:
 
 ```bash
 cd tps
 godot4 --editor
 ```
 
-If your binary is named differently on your machine, use `godot` instead of `godot4`.
+If your binary is named `godot`, use that instead of `godot4`.
 
-### TPS Audio Packs (New)
-
-The TPS branch now includes integrated third-party audio assets (SFX + music) sourced from open-license repositories.
-
-- Asset manifest: `tps/audio/ASSET_MANIFEST.json`
-- License and attribution notes: `tps/audio/THIRD_PARTY_AUDIO_LICENSES.md`
-
-The runtime audio system is handled by `AudioManager` (autoload), with separate `Music`, `SFX`, and `UI` buses.
-
-## Regenerate Spritesheets (Optional)
-
-The project includes procedural spritesheet generation with top-edge armor highlights (30K style edge-lighting pass):
+Headless smoke check:
 
 ```bash
-python3 scripts/generate_sheets.py
+godot --headless --path tps --quit
 ```
 
-This regenerates:
-
-- `assets/garro_sheet.bmp`
-- `assets/traitor_sheet.bmp`
-
-## AnimatedSprite JSON Format
-
-`AnimatedSprite` expects keys in this pattern:
-
-- `Idle_0` ... `Idle_7`
-- `Walk_0` ... `Walk_7`
-
-Direction indices:
-
-- `0=N`, `1=NE`, `2=E`, `3=SE`, `4=S`, `5=SW`, `6=W`, `7=NW`
-
-Frame objects use:
-
-```json
-{ "x": 64, "y": 96, "w": 32, "h": 32, "duration": 95 }
-```
-
-Animation behavior:
-
-- `Idle`: subtle breathing shoulder-pad drift.
-- `Walk`: heavy 4-frame stomp cadence.
-
-## Run
-
-```bash
-./build/war30k_adventure
-```
-
-For the TPS project, open `tps/project.godot` in Godot 4 and run the main scene.
-
-## TPS Prototype Controls
+## TPS Controls
 
 - Move: `W A S D` or left stick
 - Look: mouse or right stick
-- Aim: right mouse button or gamepad LT
-- Fire: left mouse button or gamepad RT
-- Reload: `R` or gamepad Y
+- Aim: right mouse button / gamepad LT-LB mapping (project action `aim`)
+- Fire: left mouse button / gamepad RT-RB mapping (project action `fire`)
+- Reload: `R` or gamepad `Y`
 - Sprint: `Shift` or left stick press
-- Pause/mouse capture toggle: `Esc`
+- Interact: `E` or gamepad `A`
+- Dialogue continue: `Enter`/mouse left/gamepad `A`
+- Skip dialogue/cutscene: `Esc` or gamepad `B`/`Start`
+- Restart after fail/win: `Enter`/`R`/gamepad `Start`
 
-## Changelog
+## Audio Attribution
 
-See [CHANGELOG.md](CHANGELOG.md) for release history.
+Integrated TPS audio assets were sourced from open-license packs.
+
+- Manifest: `tps/audio/ASSET_MANIFEST.json`
+- License notes: `tps/audio/THIRD_PARTY_AUDIO_LICENSES.md`
+
+## Additional Documentation
+
+- Root release history: [`CHANGELOG.md`](CHANGELOG.md)
+- Latest recorded SDL2 release note: `docs/releases/v0.6.0.md`
+- TPS migration docs: `tps/docs/tps-migration/`
 
 ## Disclaimer
 

@@ -1,53 +1,70 @@
-# Vertical Slice Spec - VS01 Isstvan Extraction
+# Vertical Slice Spec - VS01 Loyalist Breakout
 
 ## Goal
 
-Deliver one playable third-person shooter mission from spawn to extraction with keyboard/mouse and controller support.
+Deliver one fully playable TPS mission lane (spawn -> combat waves -> boss -> extraction)
+with chapter narrative beats, controller support, and integrated audio identity.
 
-## Scope in this commit
+## In-scope implementation (current main)
 
-- Third-person movement and camera orbit.
-- Aim mode with shoulder camera zoom behavior.
-- Boltgun hitscan fire and reload.
-- HUD for health, armor, ammo, objective status.
-- Extraction zone objective completion after combat gating.
-- Multiple enemy archetypes:
-  - melee traitor marine
-  - ranged cultist with projectiles
-  - elite nurgle champion
-- Encounter director scripting:
-  - mixed-wave composition
-  - timed reinforcement events
-  - in-mission event feed messaging
-- Mission state loop:
-  - active combat
-  - failed (player death)
-  - victory (extraction reached)
-  - restart (`Enter`/`R`/gamepad `Start`) support
-- Narrative layer:
-  - four-chapter story progression scaffold
-  - chapter intro cutscenes with subtitle timeline and skip support (`Esc`/gamepad `B`/`Start`)
-  - contact moments through NPC interaction triggers (`E`/gamepad `A`)
-  - chapter/event/subtitle HUD integration
-- Death Guard-themed placeholder materials and moody battlefield lighting.
+### Core shooter loop
 
-## Out of scope for this commit
+- Third-person movement/camera, sprint, aim, hitscan boltgun, reload.
+- Health/armor/ammo combat state with fail/victory mission transitions.
+- Mission restart support after fail/victory (`Enter`/`R`/gamepad `Start`).
 
-- Animation state machine and final marine model rig.
-- Full cinematic camera rails and authored animation track system.
-- Full progression and mission chain.
+### Enemy and mission flow
 
-## Acceptance checklist
+- Wave-driven encounter controller with:
+  - melee traitors
+  - ranged cultists (projectiles)
+  - elite nurgle champions
+- Boss phase: Harbinger encounter with telegraphed strikes/nova pressure.
+- Extraction unlock gating after combat completion.
+- Adaptive mission tuning and event-feed messaging during wave flow.
 
-- Level boots directly from `project.godot` run scene.
-- Player can move, sprint, aim, fire, and reload.
-- HUD reacts to ammo changes while firing/reloading.
-- Wave composition spawns melee/ranged/elite enemies.
-- Reinforcement events can spawn additional units mid-wave.
-- Entering extraction zone marks objective complete only after combat lock is cleared.
-- Player death marks mission failed and blocks objective completion.
-- Restart key reloads the mission scene after fail or victory.
-- Story systems load chapter data from JSON and expose chapter intro cutscenes.
-- NPC contact moments can trigger dialogue in-mission and update objective/event messaging.
-- Controller can progress dialogue/cutscene flow without keyboard.
-- No fatal startup script errors from missing nodes/scripts.
+### Narrative and chapter systems
+
+- Four chapter JSON scaffold with cutscene intros and contact dialogues.
+- Story interaction layers:
+  - chapter intro playback
+  - NPC/contact triggered dialogue
+  - chapter/contact event feed updates on HUD
+- Branch-choice registration and mission consequence hook points.
+
+### Progression and abilities
+
+- Ability system with three active slots:
+  - `resilience_surge`
+  - `toxic_grenade`
+  - `rally_command`
+- Progression state broadcasts for level/xp/requisition HUD updates.
+- Optional objective reward hooks tied to mission outcomes.
+
+### Audio
+
+- Event-driven audio manager autoload (`SYS_AudioManager.gd`):
+  - combat/UI/footstep/boss SFX routing
+  - ambience layers
+  - combat/intermission music transitions
+- Headless-safe audio behavior for runtime validation environments.
+
+## Known constraints (still out of scope)
+
+- Final hero/enemy art production assets and full animation graph polish.
+- Full campaign persistence across multiple authored mission scenes.
+- Advanced cinematic toolchain beyond current cutscene-shot JSON runtime.
+- Full settings menu UX surface (data + backend exist; front-end remains lightweight).
+
+## Acceptance checklist (current)
+
+- `project.godot` boots directly into `SCN_LVL_VerticalSlice_01.tscn`.
+- Player can move/sprint/aim/fire/reload with keyboard+mouse and controller.
+- HUD updates for HP/armor/ammo/objective/wave/enemy count.
+- Wave combat spawns mixed archetypes and handles reinforcements.
+- Boss encounter can spawn and resolve mission progression.
+- Extraction completes mission only when combat gate opens.
+- Story systems can start chapter intros and contact dialogue.
+- Branch choices emit to mission systems without fatal errors.
+- Audio manager initializes in normal runtime and safely no-ops in headless mode.
+- Headless smoke run completes without fatal script parse/runtime failures.

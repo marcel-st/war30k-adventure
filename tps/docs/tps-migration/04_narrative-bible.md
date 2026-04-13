@@ -1,102 +1,100 @@
-# Narrative Bible - Loyalist Death Guard Arc
+# Narrative Bible - Loyalist Death Guard Arc (Runtime State)
 
-## Pillars
+## Narrative Pillars
 
-- Tone: stoic, attritional, disciplined, anti-theatrical.
-- Perspective: loyalist Death Guard strike captain operating after the Isstvan betrayal.
-- Narrative function: each chapter delivers one operational objective plus one human contact beat.
-- Delivery model: brief intro cutscene, one or more contact moments, gameplay combat lane, extraction/transition.
+- **Tone**: stoic, attritional, operationally focused.
+- **Perspective**: loyalist Death Guard command element after Isstvan betrayal.
+- **Loop**: chapter intro -> in-mission contact moments -> combat pressure escalation -> extraction/transition.
+- **Gameplay alignment**: narrative beats should reinforce tactical intent, never block core combat controls.
 
-## Four-Chapter Arc
+## Chapter Arc
 
 ### Chapter I - Drop Site Aftermath
 
-- Setting: ash plains and ruined kill-lanes immediately after the massacre.
-- Objective beat: establish survival corridor and hold until extraction route opens.
-- Contact beat: Macer Varren reports traitor sweep patterns and stabilizes loyalist comms.
-- Theme: betrayal is acknowledged but subordinated to duty.
+- Establish corridor and stabilize command flow.
+- Contact beats emphasize immediate survival doctrine.
 
 ### Chapter II - Warp Transit Crisis
 
-- Setting: unstable relay corridor under warp-static pressure.
-- Objective beat: secure transmission lane while sabotage pressure rises.
-- Contact beat: Vox-Magos Hest confirms traitor ciphers inside maintenance channels.
-- Theme: endurance over certainty.
+- Relay integrity and sabotage response under increasing pressure.
+- Introduces branching doctrine choice in dialogue (`relay_decision`).
 
 ### Chapter III - Blockade Breach
 
-- Setting: Luna approach under active interdiction.
-- Objective beat: force a breach to preserve warning route continuity.
-- Contact beat: bridge vox coordination under boarding pressure.
-- Theme: attrition as strategy.
+- Boarding pressure and breach stance escalation.
+- Adds tactical branch choice (`ch3_tactic`) that feeds mission composition.
 
 ### Chapter IV - Terra Relay
 
-- Setting: final relay bastion with collapsing perimeter.
-- Objective beat: hold chamber and complete transmission window.
-- Contact beat: Euphrati Keeler and Malcador relay guidance at final stand.
-- Theme: warning delivered through sacrifice-capable resolve.
+- Final transmission push and resolution framing.
+- Contact beats transition from tactical to strategic consequence.
 
-## Dialogue Style Guide
+## Runtime Data Schema
 
-- Keep lines concise and purposeful; avoid ornate rhetoric.
-- Favor concrete verbs (hold, anchor, endure, breach, transmit).
-- Keep operational information embedded in character voice.
-- Loyalist Death Guard voice should feel emotionally restrained but morally unambiguous.
+### Chapters (`tps/data/story/chapters/chapters.json`)
 
-## Runtime Authoring Schema
+Each chapter entry includes:
 
-### Chapters (`data/story/chapters/chapters.json`)
+- `chapter_id`
+- `title`
+- `summary`
+- `intro_cutscene`
+- `contacts_file`
 
-Each chapter entry uses:
+### Contacts (`tps/data/story/dialogues/contacts_*.json`)
 
-- `chapter_id`: unique chapter key.
-- `title`: UI-ready chapter title.
-- `summary`: short context string.
-- `intro_cutscene`: path to cutscene JSON.
-- `contacts_file`: path to contacts JSON.
+Per contact entry:
 
-### Contacts (`data/story/dialogues/contacts_*.json`)
+- `contact_id`
+- `display_name`
+- `title`
+- `lines`
+- `objective_update` (optional)
+- `branch_id` / `branch_choices` (optional branch-defining contacts)
 
-Top-level:
+### Cutscenes (`tps/data/story/cutscenes/*.json`)
 
-- `chapter_id`: chapter key for organization.
-- `contacts`: array of contact blocks.
+Per cutscene:
 
-Each contact block:
+- `cutscene_id`
+- `title`
+- `allow_skip`
+- `shots[]` with camera and subtitle data
 
-- `contact_id`: unique trigger key used by NPCs and mission scripts.
-- `display_name`: name used in event messaging.
-- `objective_update` (optional): objective text to push after dialogue.
-- `lines`: array of `{ speaker, text }`.
+Per shot:
 
-### Cutscenes (`data/story/cutscenes/*.json`)
+- `duration`
+- `camera_pos`
+- `look_at`
+- `fov`
+- `speaker` / `line` (optional subtitle content)
 
-Top-level:
+## Branch Integration
 
-- `cutscene_id`: unique key.
-- `title`: display label.
-- `allow_skip`: whether skip action is honored.
-- `shots`: ordered camera beats.
+Current branch-aware contacts:
 
-Each shot:
+- `ch2_contact_hest` -> branch `relay_decision`
+- `ch3_contact_luna_vox` -> branch `ch3_tactic`
 
-- `duration`: seconds.
-- `camera_pos`: `[x, y, z]`.
-- `look_at`: `[x, y, z]`.
-- `fov`: field of view.
-- `speaker` / `line`: optional subtitle pair.
+Branch selections propagate through `STY_StoryManager` into `GameState.set_branch_choice(...)`, then into mission logic (`MIS_VS01_Controller`) where they influence wave makeup and event messaging.
 
-## Control Mapping Expectations
+## Dialogue and Subtitle Style
 
-- Continue dialogue: `Enter`, gamepad `A`, or primary fire action.
-- Skip dialogue: `Esc`.
-- Skip cutscene: `Esc`, gamepad `B`, or `Start`.
-- Trigger NPC contact: `E`, gamepad `A`.
+- Keep lines concise and directive.
+- Prefer concrete verbs (hold, breach, secure, transmit, endure).
+- Avoid ornate language that dilutes tactical clarity.
+- Ensure each beat carries actionable context or emotional consequence.
 
-## Narrative Integration Notes
+## Input/UX Expectations
 
-- Narrative pacing should never hard-lock combat flow if a contact is missed.
-- Contacts can be triggered by NPC overlap or mission-script queueing.
-- Chapter titles are propagated via `GameState.story_chapter_changed` for HUD display.
-- Cutscene subtitle lines are mirrored into the HUD event feed for readability.
+- Continue dialogue: `Enter`, mouse-left, or gamepad `A`
+- Skip/close dialogue: `Esc`, gamepad `B`/`Start`
+- Skip cutscene: `Esc`, gamepad `B`/`Start`
+- Trigger contact actors: `E`, gamepad `A`
+
+## Integration Notes
+
+- Narrative state is surfaced through `GameState.story_chapter_changed`.
+- Contact objective updates are pushed into HUD/event feed.
+- Missed optional contacts should not hard-fail mission progression.
+- Branch choice events should always have a fallback/default mission path.
