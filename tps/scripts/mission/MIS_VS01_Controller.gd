@@ -50,6 +50,11 @@ var _boss_spawned: bool = false
 var _active_mission_profile: Dictionary = {}
 var _bonus_objective_active: bool = false
 var _bonus_objective_completed: bool = false
+var _adaptive_reinforcement_scale: float = 1.0
+var _adaptive_spawn_interval_scale: float = 1.0
+var _current_branch_choice: String = "default_path"
+var _branch_consequence_library: Dictionary = {}
+var _active_branch_consequence: Dictionary = {}
 
 const ENEMY_COMPACT_INTERVAL: float = 0.5
 
@@ -63,6 +68,8 @@ func _ready() -> void:
 	GameState.mission_state_changed.connect(_on_mission_state_changed)
 	GameState.restart_requested.connect(_on_restart_requested)
 	GameState.story_contact_requested.connect(_on_story_contact_requested)
+	if GameState.has_signal("branch_choice_changed"):
+		GameState.branch_choice_changed.connect(_on_branch_choice_changed)
 	if story_systems and story_systems.has_method("bootstrap_story"):
 		story_systems.bootstrap_story()
 	if story_systems and story_systems.has_method("play_chapter_intro"):
@@ -71,7 +78,9 @@ func _ready() -> void:
 		story_systems.request_contact("ch1_contact_ignatius")
 	_chapter_triggered[1] = true
 	_setup_mission_profile()
+	_apply_branch_choice("default_path")
 	extraction_zone.monitoring = false
+	GameState.configure_projectile_pool_container(get_node_or_null("ProjectileContainer"))
 	_start_next_wave()
 
 func _physics_process(_delta: float) -> void:
@@ -122,17 +131,27 @@ func _start_next_wave() -> void:
 		extraction_zone.monitoring = true
 		return
 
-	var wave_data: Dictionary = _waves[_wave_index]
+	var wave_data: Dictionary = _waves[_wave_index].duplicate(true)
 	var melee_count: int = int(wave_data.get("melee", 0))
 	var ranged_count: int = int(wave_data.get("ranged", 0))
 	var elite_count: int = int(wave_data.get("elite", 0))
 	var spawn_interval: float = float(wave_data.get("spawn_interval", 0.5))
+	melee_count = int(round(float(melee_count) * _adaptive_reinforcement_scale))
+	ranged_count = int(round(float(ranged_count) * _adaptive_reinforcement_scale))
+	elite_count = int(round(float(elite_count) * _adaptive_reinforcement_scale))
+	if not _active_branch_consequence.is_empty():
+		melee_count += int(_active_branch_consequence.get("bonus_melee", 0))
+		ranged_count += int(_active_branch_consequence.get("bonus_ranged", 0))
+		elite_count += int(_active_branch_consequence.get("bonus_elite", 0))
+	spawn_interval *= _adaptive_spawn_interval_scale
 	var total_count: int = melee_count + ranged_count + elite_count
 	var objective_text: String = str(wave_data.get("objective", "Eliminate all enemies in wave %d." % (_wave_index + 1)))
 	GameState.set_objective("%s (%d/%d)" % [objective_text, _wave_index + 1, _waves.size()])
 	GameState.set_wave_progress(_wave_index + 1, _waves.size())
 	GameState.set_enemies_remaining(total_count)
 	GameState.push_event_message("Wave %d started: %d hostiles." % [_wave_index + 1, total_count])
+	if EventBus:
+		EventBus.emit_event("mission.wave_started", {"wave": _wave_index + 1, "hostiles": total_count})
 	if story_systems and story_systems.has_method("request_contact"):
 		if _wave_index == 0:
 			story_systems.request_contact("ch1_contact_macer")
@@ -142,6 +161,8 @@ func _start_next_wave() -> void:
 				if story_systems and story_systems.has_method("play_chapter_intro"):
 					story_systems.play_chapter_intro(2)
 			story_systems.request_contact("ch2_contact_hest")
+	if _active_branch_consequence.has("event_message"):
+		GameState.push_event_message(str(_active_branch_consequence.get("event_message", "")))
 	_is_spawning_wave = true
 	await _spawn_wave_units(melee_count, ranged_count, elite_count, spawn_interval)
 	_is_spawning_wave = false
@@ -173,6 +194,7 @@ func _spawn_unit(spawn_scene: PackedScene, spawn_position: Vector3) -> void:
 	enemy_container.add_child(enemy)
 	enemy.global_position = spawn_position
 	_active_enemies.append(enemy)
+	enemy.add_to_group("enemy")
 	GameState.set_enemies_remaining(_active_enemies.size())
 
 func _start_wave_events(wave_data: Dictionary) -> void:
@@ -263,6 +285,7 @@ func _spawn_boss_encounter() -> void:
 func _on_enemy_tree_exited(enemy: Node3D) -> void:
 	_active_enemies.erase(enemy)
 	GameState.set_enemies_remaining(_active_enemies.size())
+	_update_adaptive_director()
 
 func _on_mission_state_changed(new_state: String) -> void:
 	if new_state == "failed":
@@ -306,6 +329,19 @@ func _setup_mission_profile() -> void:
 	if profile.is_empty():
 		return
 	_active_mission_profile = profile
+	var adaptive_variant: Variant = profile.get("adaptive_director", {})
+	if not (adaptive_variant is Dictionary):
+		adaptive_variant = profile.get("adaptive_rules", {})
+	if adaptive_variant is Dictionary:
+		var adaptive_dict: Dictionary = adaptive_variant as Dictionary
+		_adaptive_reinforcement_scale = clampf(float(adaptive_dict.get("base_reinforcement_scale", 1.0)), 0.8, 1.4)
+		_adaptive_spawn_interval_scale = clampf(float(adaptive_dict.get("base_spawn_interval_scale", 1.0)), 0.65, 1.3)
+	var branch_variant: Variant = profile.get("branch_consequences", {})
+	if branch_variant is Dictionary:
+		var branch_dict: Dictionary = branch_variant as Dictionary
+		var tone_variant: Variant = branch_dict.get("ops_tone", {})
+		if tone_variant is Dictionary:
+			_branch_consequence_library = tone_variant as Dictionary
 	var optional_variant: Variant = profile.get("optional_objectives", [])
 	if optional_variant is Array and not (optional_variant as Array).is_empty():
 		_bonus_objective_active = true
@@ -322,3 +358,43 @@ func _finish_optional_objectives() -> void:
 	if GameState.has_method("grant_progression_reward"):
 		GameState.grant_progression_reward("objective_optional")
 	GameState.push_event_message("Optional objective complete: bonus requisition awarded.")
+
+func _update_adaptive_director() -> void:
+	if _active_mission_profile.is_empty():
+		return
+	var enemy_pressure: float = clampf(float(_active_enemies.size()) / 10.0, 0.0, 1.0)
+	var player_health_ratio: float = clampf(GameState.health / GameState.MAX_HEALTH, 0.0, 1.0)
+	var pressure_target: float = 0.45 + enemy_pressure * 0.45
+	if player_health_ratio < 0.35:
+		pressure_target -= 0.18
+	elif player_health_ratio > 0.8:
+		pressure_target += 0.08
+	_adaptive_reinforcement_scale = clampf(0.9 + pressure_target * 0.5, 0.75, 1.35)
+	_adaptive_spawn_interval_scale = clampf(1.08 - pressure_target * 0.32, 0.7, 1.2)
+
+func _on_branch_choice_changed(branch_id: String, choice_id: String) -> void:
+	if branch_id == "":
+		return
+	if branch_id == "relay_decision" or branch_id == "ch3_tactic":
+		_apply_branch_choice(choice_id)
+
+func _apply_branch_choice(choice_id: String) -> void:
+	if choice_id == "":
+		return
+	_current_branch_choice = choice_id
+	_active_branch_consequence.clear()
+	if _branch_consequence_library.has(choice_id):
+		var consequence_variant: Variant = _branch_consequence_library.get(choice_id, {})
+		if consequence_variant is Dictionary:
+			_active_branch_consequence = consequence_variant as Dictionary
+	if EventBus:
+		EventBus.emit_event("mission.branch_choice_applied", {"choice_id": choice_id})
+	match choice_id:
+		"secure_relay":
+			_adaptive_spawn_interval_scale = minf(_adaptive_spawn_interval_scale * 0.92, 1.05)
+		"breach_aggressive":
+			_adaptive_reinforcement_scale = minf(_adaptive_reinforcement_scale * 1.14, 1.35)
+		"hold_the_line":
+			_adaptive_spawn_interval_scale = maxf(_adaptive_spawn_interval_scale * 1.04, 0.78)
+		_:
+			pass

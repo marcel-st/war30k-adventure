@@ -15,6 +15,7 @@ signal progression_changed(level: int, xp: int, requisition: int)
 signal chapter_reward_unlocked(chapter_id: String, reward_id: String)
 signal wave_skip_requested()
 signal chapter_cycle_requested()
+signal branch_choice_changed(branch_id: String, choice_id: String)
 
 const MAX_HEALTH := 100.0
 const MAX_ARMOR := 100.0
@@ -48,6 +49,7 @@ var ability_cooldowns: Dictionary = {
 }
 var ability_order: Array[String] = ["resilience_surge", "toxic_grenade", "rally_command"]
 var commander_controller: Node = null
+var branch_choices: Dictionary = {}
 
 func _ready() -> void:
 	_setup_default_input_actions()
@@ -67,6 +69,7 @@ func reset_run() -> void:
 	mission_state_reason = ""
 	story_chapter_id = "ch1"
 	story_chapter_title = "Drop Site Aftermath"
+	branch_choices.clear()
 	player_level = max(1, player_level)
 	_reset_ability_cooldowns()
 	emit_player_stats()
@@ -143,6 +146,8 @@ func set_encounter_event(text: String) -> void:
 	encounter_event_text = text
 	event_feed_text = text
 	emit_signal("event_feed_changed", event_feed_text)
+	if AudioManager:
+		AudioManager.play_ui_event("objective_update")
 
 func push_event_message(text: String) -> void:
 	set_encounter_event(text)
@@ -172,7 +177,7 @@ func request_wave_skip() -> void:
 	emit_signal("wave_skip_requested")
 
 func request_cycle_chapter() -> void:
-	emit_signal("cycle_chapter_requested")
+	emit_signal("chapter_cycle_requested")
 
 func start_contact_moment(contact_id: String) -> void:
 	if contact_id == "":
@@ -205,28 +210,15 @@ func unlock_chapter_reward(chapter_id: String, reward_id: String) -> void:
 func trigger_ability(ability_id: String) -> bool:
 	if ability_id == "":
 		return false
+	var ability_system: Node = get_node_or_null("AbilitySystem")
+	if ability_system and ability_system.has_method("trigger_ability"):
+		return bool(ability_system.trigger_ability(ability_id))
 	if not ability_cooldowns.has(ability_id):
 		return false
 	if float(ability_cooldowns[ability_id]) > 0.0:
 		return false
-	var cooldown: float = 12.0
-	match ability_id:
-		"resilience_surge":
-			cooldown = 18.0
-			push_event_message("Ability: Resilience Surge activated.")
-		"toxic_grenade":
-			cooldown = 14.0
-			push_event_message("Ability: Toxic Grenade deployed.")
-		"rally_command":
-			cooldown = 22.0
-			push_event_message("Ability: Rally Command issued.")
-		_:
-			cooldown = 12.0
-			push_event_message("Ability activated: %s" % ability_id)
-	ability_cooldowns[ability_id] = cooldown
+	ability_cooldowns[ability_id] = 12.0
 	emit_signal("ability_cooldowns_changed", ability_cooldowns.duplicate(true))
-	if EventBus and EventBus.has_method("emit_event"):
-		EventBus.emit_event("ability_triggered", {"ability_id": ability_id, "cooldown": cooldown})
 	return true
 
 func tick_ability_cooldowns(delta: float) -> void:
@@ -243,6 +235,17 @@ func tick_ability_cooldowns(delta: float) -> void:
 			changed = true
 	if changed:
 		emit_signal("ability_cooldowns_changed", ability_cooldowns.duplicate(true))
+
+func set_ability_player(player: Node) -> void:
+	var ability_system: Node = get_node_or_null("AbilitySystem")
+	if ability_system and ability_system.has_method("set_player"):
+		ability_system.set_player(player)
+
+func get_ability_move_speed_multiplier() -> float:
+	var ability_system: Node = get_node_or_null("AbilitySystem")
+	if ability_system and ability_system.has_method("get_move_speed_multiplier"):
+		return float(ability_system.get_move_speed_multiplier())
+	return 1.0
 
 func emit_player_stats() -> void:
 	emit_signal("player_stats_changed", health, armor, ammo_in_magazine, ammo_reserve)
@@ -331,6 +334,10 @@ func _setup_default_input_actions() -> void:
 		_key_event(KEY_F9),
 		_joy_button_event(JOY_BUTTON_DPAD_DOWN)
 	])
+	_ensure_action("debug_toggle_god_mode", [_key_event(KEY_F1)])
+	_ensure_action("debug_toggle_infinite_ammo", [_key_event(KEY_F2)])
+	_ensure_action("debug_skip_wave", [_key_event(KEY_F3)])
+	_ensure_action("debug_cycle_chapter", [_key_event(KEY_F4)])
 
 func _ensure_action(action_name: String, events: Array[InputEvent]) -> void:
 	if not InputMap.has_action(action_name):
@@ -367,6 +374,26 @@ func _xp_threshold_for_level(level: int) -> int:
 func _reset_ability_cooldowns() -> void:
 	for ability in ability_order:
 		ability_cooldowns[ability] = 0.0
+
+func get_mission_profile(profile_id: String) -> Dictionary:
+	var combat_data: Node = get_node_or_null("CombatData")
+	if combat_data and combat_data.has_method("get_mission_profile"):
+		return combat_data.get_mission_profile(profile_id)
+	return {}
+
+func set_branch_choice(branch_id: String, choice_id: String) -> void:
+	if branch_id == "" or choice_id == "":
+		return
+	branch_choices[branch_id] = choice_id
+	emit_signal("branch_choice_changed", branch_id, choice_id)
+
+func get_branch_choice(branch_id: String, fallback: String = "") -> String:
+	if branch_choices.has(branch_id):
+		return str(branch_choices[branch_id])
+	return fallback
+
+func get_all_branch_choices() -> Dictionary:
+	return branch_choices.duplicate(true)
 
 func get_profile_entry(domain: String, array_key: String, entry_id: String) -> Dictionary:
 	if domain == "" or array_key == "" or entry_id == "":
@@ -413,3 +440,15 @@ func register_elite_controller(elite_node: Node) -> void:
 func clear_elite_controller(elite_node: Node) -> void:
 	if elite_node and elite_node.has_method("remove_from_group"):
 		elite_node.remove_from_group("traitor_commander")
+
+func release_enemy_projectile(projectile: Node) -> void:
+	var projectile_pool: Node = get_node_or_null("ProjectilePool")
+	if projectile_pool and projectile_pool.has_method("recycle_enemy_projectile"):
+		projectile_pool.recycle_enemy_projectile(projectile)
+	else:
+		projectile.queue_free()
+
+func configure_projectile_pool_container(container: Node3D) -> void:
+	var projectile_pool: Node = get_node_or_null("ProjectilePool")
+	if projectile_pool and projectile_pool.has_method("configure_container"):
+		projectile_pool.configure_container(container)

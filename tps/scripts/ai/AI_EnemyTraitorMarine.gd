@@ -92,6 +92,8 @@ func _try_melee_attack() -> void:
 	if attack_timer > 0.0:
 		return
 	attack_timer = attack_cooldown / maxf(0.4, _commander_bonus_scale)
+	if EventBus:
+		EventBus.emit_event("combat.enemy_melee", {"enemy_type": "traitor_marine"})
 	if tracked_player and tracked_player.has_method("apply_damage"):
 		tracked_player.apply_damage(attack_damage * _commander_bonus_scale, global_position)
 
@@ -117,6 +119,8 @@ func _die() -> void:
 		awareness_area.monitoring = false
 	if visual_root:
 		visual_root.scale = Vector3(1.0, 0.35, 1.0)
+	if EventBus:
+		EventBus.emit_event("combat.enemy_died", {"enemy_type": "traitor_marine"})
 	emit_signal("died", self)
 	var timer: SceneTreeTimer = get_tree().create_timer(corpse_lifetime)
 	timer.timeout.connect(queue_free)

@@ -2,7 +2,11 @@
   "contacts": [
     {
       "contact_id": "ch3_contact_luna_vox",
+      "display_name": "Bridge Vox",
       "title": "Luna Vox Breach",
+      "branch_id": "ch3_tactic",
+      "branch_choices": ["breach_aggressive", "breach_secure"],
+      "objective_update": "Breach Luna corridor and hold the relay approach.",
       "lines": [
         {
           "speaker": "Bridge Vox",

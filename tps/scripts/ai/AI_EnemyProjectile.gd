@@ -49,6 +49,11 @@ func _on_body_entered(body: Node) -> void:
 		return
 	if body.is_in_group("player") and body.has_method("apply_damage"):
 		body.apply_damage(damage)
+		if EventBus:
+			EventBus.emit_event("combat.projectile_impact", {"position": global_position, "damage": damage})
+	else:
+		if EventBus:
+			EventBus.emit_event("combat.projectile_impact", {"position": global_position, "damage": damage})
 	_deactivate()
 
 func _deactivate() -> void:

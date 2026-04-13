@@ -22,12 +22,16 @@ func spawn_enemy_projectile(position: Vector3, direction: Vector3, speed: float,
 		return null
 	if _container and projectile.get_parent() != _container:
 		_container.add_child(projectile)
-	projectile.visible = true
-	projectile.set_process(true)
-	projectile.set_physics_process(true)
-	projectile.global_position = position
-	if projectile.has_method("setup"):
+	if projectile.has_method("activate"):
+		projectile.activate(position, direction, speed, damage, owner)
+	elif projectile.has_method("setup"):
+		projectile.global_position = position
 		projectile.setup(direction, speed, damage, owner)
+	else:
+		projectile.visible = true
+		projectile.set_process(true)
+		projectile.set_physics_process(true)
+		projectile.global_position = position
 	_in_use_enemy_projectiles[projectile] = true
 	return projectile
 

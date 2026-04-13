@@ -60,6 +60,8 @@ func _show_next_line() -> void:
 	speaker_label.text = str(line.get("speaker", "Unknown"))
 	line_label.text = str(line.get("text", ""))
 	hint_label.text = "Enter / A / RB: Next   Esc / B: Close"
+	if AudioManager:
+		AudioManager.play_ui_event("ui_click")
 	emit_signal("dialogue_advanced", _active_contact_id, _line_index)
 
 func _end_dialogue() -> void:

@@ -88,6 +88,8 @@ func _try_slam_attack() -> void:
 	if attack_timer > 0.0:
 		return
 	attack_timer = attack_cooldown
+	if EventBus:
+		EventBus.emit_event("combat.enemy_melee", {"enemy_type": "champion"})
 	if tracked_player and tracked_player.has_method("apply_damage"):
 		tracked_player.apply_damage(attack_damage, global_position)
 
@@ -111,6 +113,8 @@ func _die() -> void:
 		command_aura.monitoring = false
 	if visual_root:
 		visual_root.scale = Vector3(1.15, 0.22, 1.15)
+	if EventBus:
+		EventBus.emit_event("combat.enemy_died", {"enemy_type": "champion"})
 	emit_signal("died", self)
 	var timer: SceneTreeTimer = get_tree().create_timer(corpse_lifetime)
 	timer.timeout.connect(queue_free)

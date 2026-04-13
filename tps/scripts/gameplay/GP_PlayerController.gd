@@ -15,6 +15,8 @@ extends CharacterBody3D
 @onready var boltgun: Node3D = $WeaponSocket/Boltgun
 @onready var visual_root: Node3D = $VisualRoot
 
+const TOXIC_HAZARD_SCENE: PackedScene = preload("res://scenes/gameplay/SCN_GP_ToxicHazard.tscn")
+
 var gravity: float = 24.0
 var health: float = 100.0
 var armor: float = 100.0
@@ -22,6 +24,13 @@ var current_combat_move_speed_multiplier: float = 1.0
 var _hit_reaction_timer: float = 0.0
 var _hit_reaction_amount: float = 0.0
 var _ability_speed_multiplier: float = 1.0
+var _damage_reduction_ratio: float = 0.0
+var _damage_reduction_timer: float = 0.0
+var _hazard_resist_ratio: float = 0.0
+var _hazard_resist_timer: float = 0.0
+var _move_buff_bonus: float = 0.0
+var _move_buff_timer: float = 0.0
+var _footstep_timer: float = 0.0
 
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -50,6 +59,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 	_apply_gravity(delta)
+	_tick_temporary_effects(delta)
 	_process_movement(delta)
 	_process_aim_rotation(delta)
 	_process_combat()
@@ -73,6 +83,7 @@ func _process_movement(delta: float) -> void:
 	if Input.is_action_pressed("sprint"):
 		target_speed = sprint_speed
 	target_speed *= current_combat_move_speed_multiplier
+	target_speed *= (1.0 + _move_buff_bonus)
 
 	var target_velocity: Vector3 = move_dir * target_speed
 	var horiz_velocity: Vector3 = Vector3(velocity.x, 0.0, velocity.z)
@@ -80,6 +91,10 @@ func _process_movement(delta: float) -> void:
 	horiz_velocity = horiz_velocity.lerp(target_velocity, lerp_factor)
 	velocity.x = horiz_velocity.x
 	velocity.z = horiz_velocity.z
+	_footstep_timer = maxf(0.0, _footstep_timer - delta)
+	if input_2d.length() > 0.15 and is_on_floor() and _footstep_timer <= 0.0:
+		_emit_footstep_sfx()
+		_footstep_timer = 0.24 if Input.is_action_pressed("sprint") else 0.34
 
 func _process_aim_rotation(delta: float) -> void:
 	var look_input: Vector2 = Vector2.ZERO
@@ -112,9 +127,12 @@ func _process_combat() -> void:
 func apply_damage(raw_damage: float, _source_position: Vector3 = Vector3.ZERO) -> void:
 	if raw_damage <= 0.0 or health <= 0.0:
 		return
-	var absorbed: float = min(armor, raw_damage * 0.65)
+	if EventBus and EventBus.has_method("emit_event"):
+		EventBus.emit_event("combat.player_hit", {"damage": raw_damage, "position": global_position})
+	var mitigated_damage: float = raw_damage * (1.0 - _damage_reduction_ratio)
+	var absorbed: float = min(armor, mitigated_damage * 0.65)
 	armor -= absorbed
-	health = max(0.0, health - (raw_damage - absorbed))
+	health = max(0.0, health - (mitigated_damage - absorbed))
 	_hit_reaction_timer = 0.12
 	_hit_reaction_amount = minf(1.0, _hit_reaction_amount + 0.65)
 	camera_aim.add_impact_shake(0.8)
@@ -123,6 +141,10 @@ func apply_damage(raw_damage: float, _source_position: Vector3 = Vector3.ZERO) -
 	GameState.emit_player_stats()
 	if health <= 0.0:
 		GameState.mark_mission_failed()
+
+func apply_damage_from_hazard(raw_damage: float, source_position: Vector3 = Vector3.ZERO) -> void:
+	var mitigated: float = raw_damage * (1.0 - _hazard_resist_ratio)
+	apply_damage(mitigated, source_position)
 
 func add_bonus_armor(amount: float) -> void:
 	if amount <= 0.0:
@@ -154,3 +176,59 @@ func _update_hit_reaction_visual(delta: float) -> void:
 	var pulse: float = 1.0 - (0.07 * _hit_reaction_amount)
 	if visual_root:
 		visual_root.scale = visual_root.scale.lerp(Vector3(pulse, pulse, pulse), clampf(delta * 22.0, 0.0, 1.0))
+
+func apply_temporary_damage_reduction(ratio: float, duration: float, hazard_resist_ratio: float = 0.0) -> void:
+	_damage_reduction_ratio = clampf(maxf(_damage_reduction_ratio, ratio), 0.0, 0.8)
+	_damage_reduction_timer = maxf(_damage_reduction_timer, duration)
+	_hazard_resist_ratio = clampf(maxf(_hazard_resist_ratio, hazard_resist_ratio), 0.0, 0.9)
+	_hazard_resist_timer = maxf(_hazard_resist_timer, duration)
+
+func apply_temporary_move_buff(move_speed_bonus: float, duration: float) -> void:
+	_move_buff_bonus = clampf(maxf(_move_buff_bonus, move_speed_bonus), 0.0, 0.5)
+	_move_buff_timer = maxf(_move_buff_timer, duration)
+
+func spawn_toxic_grenade(radius: float, damage_per_tick: float, duration: float) -> void:
+	if TOXIC_HAZARD_SCENE == null:
+		return
+	var hazard: Node3D = TOXIC_HAZARD_SCENE.instantiate() as Node3D
+	if hazard == null:
+		return
+	var forward: Vector3 = -global_basis.z
+	forward.y = 0.0
+	if forward.length_squared() <= 0.001:
+		forward = Vector3.FORWARD
+	var spawn_position: Vector3 = global_position + forward.normalized() * 4.2
+	spawn_position.y = maxf(0.1, global_position.y)
+	hazard.global_position = spawn_position
+	if hazard.has_method("configure"):
+		hazard.configure(radius, damage_per_tick, duration)
+	if hazard.has_method("set_owner_node"):
+		hazard.set_owner_node(self)
+	get_tree().current_scene.add_child(hazard)
+	if EventBus and EventBus.has_method("emit_event"):
+		EventBus.emit_event("ability.toxic_grenade_spawned", {
+			"radius": radius,
+			"duration": duration
+		})
+	GameState.push_event_message("Toxic hazard deployed.")
+
+func _tick_temporary_effects(delta: float) -> void:
+	if _damage_reduction_timer > 0.0:
+		_damage_reduction_timer = maxf(0.0, _damage_reduction_timer - delta)
+		if _damage_reduction_timer <= 0.0:
+			_damage_reduction_ratio = 0.0
+	if _hazard_resist_timer > 0.0:
+		_hazard_resist_timer = maxf(0.0, _hazard_resist_timer - delta)
+		if _hazard_resist_timer <= 0.0:
+			_hazard_resist_ratio = 0.0
+	if _move_buff_timer > 0.0:
+		_move_buff_timer = maxf(0.0, _move_buff_timer - delta)
+		if _move_buff_timer <= 0.0:
+			_move_buff_bonus = 0.0
+
+func _emit_footstep_sfx() -> void:
+	if not EventBus:
+		return
+	EventBus.emit_event("footstep.metal", {"position": global_position, "pitch": randf_range(0.96, 1.03)})
+
+

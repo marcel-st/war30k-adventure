@@ -49,6 +49,10 @@ theme_override_font_sizes/font_size = 18
 text = "Chapter: Chapter I: Drop Site Aftermath"
 theme_override_font_sizes/font_size = 18
 
+[node name="ProgressionLabel" type="Label" parent="Margin/VBox"]
+text = "LV 1 | XP 0 | REQ 0"
+theme_override_font_sizes/font_size = 18
+
 [node name="StatusLabel" type="Label" parent="Margin/VBox"]
 text = "STATUS: ACTIVE"
 theme_override_font_sizes/font_size = 18
