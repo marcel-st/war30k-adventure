@@ -75,6 +75,26 @@ cmake --build build -j
 ./build/war30k_adventure
 ```
 
+## Build Release Packages (Godot TPS)
+
+Use the packaging script to produce Linux and Windows playable artifacts:
+
+```bash
+./scripts/package_tps_releases.sh
+```
+
+Generated outputs:
+
+- Linux AppImage: `dist/appimage/WAR30K-Adventure-TPS-x86_64.AppImage`
+- Linux raw export: `dist/linux/WAR30K_Adventure_TPS.x86_64` + `.pck`
+- Windows raw export: `dist/windows/WAR30K_Adventure_TPS.exe` + `.pck`
+- Windows zip bundle: `dist/windows/WAR30K_Adventure_TPS_windows_x86_64.zip`
+
+Notes:
+
+- The script auto-downloads Godot export templates and `appimagetool` into `tools/` if missing.
+- Export presets are generated at runtime in `tps/export_presets.cfg` and excluded from git.
+
 ## Run (Godot TPS)
 
 Install Godot 4.x, then:
