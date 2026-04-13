@@ -1,6 +1,10 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/ai/AI_EnemyTraitorMarine.gd" id="1_ai"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/metalplates_color.res" id="2_envc"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/metalplates_normal.res" id="3_envn"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/metalplates_roughness.res" id="4_envr"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/metalplates_metallic.res" id="5_envm"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_enemy"]
 radius = 0.4
@@ -12,13 +16,25 @@ height = 1.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_enemy_body"]
 albedo_color = Color(0.42, 0.43, 0.46, 1)
-metallic = 0.24
-roughness = 0.76
+albedo_texture = ExtResource("2_envc")
+metallic_texture = ExtResource("5_envm")
+roughness_texture = ExtResource("4_envr")
+normal_enabled = true
+normal_texture = ExtResource("3_envn")
+uv1_scale = Vector3(1.8, 1.8, 1.8)
+metallic = 0.34
+roughness = 0.8
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_enemy_helm"]
 albedo_color = Color(0.52, 0.25, 0.2, 1)
-metallic = 0.16
-roughness = 0.72
+albedo_texture = ExtResource("2_envc")
+metallic_texture = ExtResource("5_envm")
+roughness_texture = ExtResource("4_envr")
+normal_enabled = true
+normal_texture = ExtResource("3_envn")
+uv1_scale = Vector3(2.6, 2.6, 2.6)
+metallic = 0.24
+roughness = 0.7
 
 [sub_resource type="SphereMesh" id="SphereMesh_enemy_head"]
 radius = 0.22

@@ -1,22 +1,38 @@
-[gd_scene load_steps=10 format=3 uid="uid://scnplayermarine"]
+[gd_scene load_steps=14 format=3 uid="uid://scnplayermarine"]
 
 [ext_resource type="Script" path="res://scripts/gameplay/GP_PlayerController.gd" id="1_2f7cb"]
 [ext_resource type="PackedScene" path="res://scenes/player/SCN_PlayerCameraRig.tscn" id="2_3cxwn"]
 [ext_resource type="PackedScene" path="res://scenes/weapons/SCN_WPN_Boltgun.tscn" id="3_54ynh"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/concrete_color.res" id="4_concrete_color"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/concrete_normal.res" id="5_concrete_normal"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/concrete_roughness.res" id="6_concrete_rough"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/metalplates_color.res" id="7_metal_color"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/metalplates_normal.res" id="8_metal_normal"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/metalplates_roughness.res" id="9_metal_rough"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_marine"]
 radius = 0.45
 height = 1.15
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_armor"]
-albedo_color = Color(0.82, 0.81, 0.73, 1)
-roughness = 0.78
-metallic = 0.22
+albedo_color = Color(0.82, 0.84, 0.78, 1)
+albedo_texture = ExtResource("4_concrete_color")
+normal_enabled = true
+normal_texture = ExtResource("5_concrete_normal")
+roughness_texture = ExtResource("6_concrete_rough")
+metallic = 0.18
+roughness = 0.9
+uv1_scale = Vector3(2.5, 2.5, 2.5)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_trim"]
-albedo_color = Color(0.36, 0.45, 0.32, 1)
-roughness = 0.64
-metallic = 0.28
+albedo_color = Color(0.39, 0.48, 0.35, 1)
+albedo_texture = ExtResource("7_metal_color")
+normal_enabled = true
+normal_texture = ExtResource("8_metal_normal")
+roughness_texture = ExtResource("9_metal_rough")
+metallic = 0.35
+roughness = 0.7
+uv1_scale = Vector3(4.0, 4.0, 4.0)
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_body"]
 material = SubResource("StandardMaterial3D_armor")

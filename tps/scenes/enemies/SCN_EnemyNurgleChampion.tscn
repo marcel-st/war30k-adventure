@@ -1,6 +1,10 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scripts/ai/AI_EnemyNurgleChampion.gd" id="1_ai"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/metalplates_color.res" id="2_tex_metal_color"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/metalplates_normal.res" id="3_tex_metal_normal"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/metalplates_roughness.res" id="4_tex_metal_rough"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/metalplates_metallic.res" id="5_tex_metallic"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_champion"]
 radius = 0.55
@@ -21,11 +25,23 @@ size = Vector3(1.15, 0.3, 0.9)
 albedo_color = Color(0.34, 0.43, 0.26, 1)
 metallic = 0.25
 roughness = 0.8
+albedo_texture = ExtResource("2_tex_metal_color")
+metallic_texture = ExtResource("5_tex_metallic")
+roughness_texture = ExtResource("4_tex_metal_rough")
+normal_enabled = true
+normal_texture = ExtResource("3_tex_metal_normal")
+uv1_scale = Vector3(1.8, 1.8, 1.8)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_trim"]
 albedo_color = Color(0.42, 0.33, 0.2, 1)
 metallic = 0.34
 roughness = 0.7
+albedo_texture = ExtResource("2_tex_metal_color")
+metallic_texture = ExtResource("5_tex_metallic")
+roughness_texture = ExtResource("4_tex_metal_rough")
+normal_enabled = true
+normal_texture = ExtResource("3_tex_metal_normal")
+uv1_scale = Vector3(1.2, 1.2, 1.2)
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_awareness"]
 radius = 30.0

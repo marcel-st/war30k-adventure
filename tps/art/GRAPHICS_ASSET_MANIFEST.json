@@ -1,0 +1,96 @@
+{
+  "generated_by": "cursor-agent",
+  "generated_on": "2026-04-12",
+  "assets": [
+    {
+      "path": "assets/textures/environment/metalplates_color.png",
+      "category": "environment_material",
+      "source_title": "Metal Plates 006",
+      "source_url": "https://ambientcg.com/view?id=MetalPlates006",
+      "download_url": "https://ambientcg.com/get?file=MetalPlates006_1K-JPG.zip",
+      "author": "ambientCG",
+      "license": "CC0",
+      "attribution_required": false
+    },
+    {
+      "path": "assets/textures/environment/metalplates_normal.png",
+      "category": "environment_material",
+      "source_title": "Metal Plates 006",
+      "source_url": "https://ambientcg.com/view?id=MetalPlates006",
+      "download_url": "https://ambientcg.com/get?file=MetalPlates006_1K-JPG.zip",
+      "author": "ambientCG",
+      "license": "CC0",
+      "attribution_required": false
+    },
+    {
+      "path": "assets/textures/environment/metalplates_roughness.png",
+      "category": "environment_material",
+      "source_title": "Metal Plates 006",
+      "source_url": "https://ambientcg.com/view?id=MetalPlates006",
+      "download_url": "https://ambientcg.com/get?file=MetalPlates006_1K-JPG.zip",
+      "author": "ambientCG",
+      "license": "CC0",
+      "attribution_required": false
+    },
+    {
+      "path": "assets/textures/environment/metalplates_metallic.png",
+      "category": "environment_material",
+      "source_title": "Metal Plates 006",
+      "source_url": "https://ambientcg.com/view?id=MetalPlates006",
+      "download_url": "https://ambientcg.com/get?file=MetalPlates006_1K-JPG.zip",
+      "author": "ambientCG",
+      "license": "CC0",
+      "attribution_required": false
+    },
+    {
+      "path": "assets/textures/environment/concrete_color.png",
+      "category": "environment_material",
+      "source_title": "Concrete 048",
+      "source_url": "https://ambientcg.com/view?id=Concrete048",
+      "download_url": "https://ambientcg.com/get?file=Concrete048_1K-JPG.zip",
+      "author": "ambientCG",
+      "license": "CC0",
+      "attribution_required": false
+    },
+    {
+      "path": "assets/textures/environment/concrete_normal.png",
+      "category": "environment_material",
+      "source_title": "Concrete 048",
+      "source_url": "https://ambientcg.com/view?id=Concrete048",
+      "download_url": "https://ambientcg.com/get?file=Concrete048_1K-JPG.zip",
+      "author": "ambientCG",
+      "license": "CC0",
+      "attribution_required": false
+    },
+    {
+      "path": "assets/textures/environment/concrete_roughness.png",
+      "category": "environment_material",
+      "source_title": "Concrete 048",
+      "source_url": "https://ambientcg.com/view?id=Concrete048",
+      "download_url": "https://ambientcg.com/get?file=Concrete048_1K-JPG.zip",
+      "author": "ambientCG",
+      "license": "CC0",
+      "attribution_required": false
+    },
+    {
+      "path": "assets/textures/environment/concrete_ao.png",
+      "category": "environment_material",
+      "source_title": "Concrete 048",
+      "source_url": "https://ambientcg.com/view?id=Concrete048",
+      "download_url": "https://ambientcg.com/get?file=Concrete048_1K-JPG.zip",
+      "author": "ambientCG",
+      "license": "CC0",
+      "attribution_required": false
+    },
+    {
+      "path": "assets/textures/skyboxes/studio_small_09.jpg",
+      "category": "skybox",
+      "source_title": "Studio Small 09",
+      "source_url": "https://polyhaven.com/a/studio_small_09",
+      "download_url": "https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Tonemapped%20JPG/studio_small_09.jpg",
+      "author": "Poly Haven",
+      "license": "CC0",
+      "attribution_required": false
+    }
+  ]
+}
