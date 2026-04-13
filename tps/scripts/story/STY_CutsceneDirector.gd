@@ -55,6 +55,8 @@ func skip_active_cutscene() -> void:
 	_skipped = true
 
 func _play_shot(shot: Dictionary) -> void:
+	if _skipped:
+		return
 	var pos: Vector3 = _vec3_from_variant(shot.get("camera_pos", [0.0, 4.0, 8.0]), Vector3(0.0, 4.0, 8.0))
 	var look: Vector3 = _vec3_from_variant(shot.get("look_at", [0.0, 1.0, 0.0]), Vector3(0.0, 1.0, 0.0))
 	var fov: float = float(shot.get("fov", 60.0))

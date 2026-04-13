@@ -63,10 +63,12 @@ var _sabotage_completed: bool = false
 var _sabotage_tick_timer: float = 0.0
 var _sabotage_enemy_gate: int = 2
 var _sabotage_radius: float = 4.2
+var _runtime_sequences_enabled: bool = true
 
 const ENEMY_COMPACT_INTERVAL: float = 0.5
 
 func _ready() -> void:
+	_runtime_sequences_enabled = DisplayServer.get_name() != "headless"
 	GameState.reset_run()
 	_refresh_player_group_tag()
 	_cache_spawn_markers()
@@ -78,6 +80,14 @@ func _ready() -> void:
 	GameState.story_contact_requested.connect(_on_story_contact_requested)
 	if GameState.has_signal("branch_choice_changed"):
 		GameState.branch_choice_changed.connect(_on_branch_choice_changed)
+	_setup_mission_profile()
+	GameState.set_meta("mission_mode", _mission_mode)
+	extraction_zone.monitoring = false
+	GameState.configure_projectile_pool_container(get_node_or_null("ProjectileContainer"))
+	if not _runtime_sequences_enabled:
+		GameState.set_objective("Headless runtime: mission controller initialized.")
+		set_physics_process(false)
+		return
 	if story_systems and story_systems.has_method("bootstrap_story"):
 		story_systems.bootstrap_story()
 	if story_systems and story_systems.has_method("play_chapter_intro"):
@@ -85,11 +95,7 @@ func _ready() -> void:
 	if story_systems and story_systems.has_method("request_contact"):
 		story_systems.request_contact("ch1_contact_ignatius")
 	_chapter_triggered[1] = true
-	_setup_mission_profile()
-	GameState.set_meta("mission_mode", _mission_mode)
 	_apply_branch_choice("default_path")
-	extraction_zone.monitoring = false
-	GameState.configure_projectile_pool_container(get_node_or_null("ProjectileContainer"))
 	_start_next_wave()
 
 func _physics_process(_delta: float) -> void:
