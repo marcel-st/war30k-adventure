@@ -8,12 +8,16 @@ const DEFAULTS_PATH: String = "res://data/ux/settings_defaults.json"
 var _settings: Dictionary = {}
 var _defaults: Dictionary = {
 	"mouse_sensitivity": 0.0019,
-	"aim_assist_strength": 0.0,
+	"stick_sensitivity": 2.2,
 	"fov": 75.0,
+	"aim_assist_strength": 0.0,
 	"master_volume": 0.9,
 	"sfx_volume": 0.9,
 	"music_volume": 0.8,
-	"enable_subtitle_background": true
+	"enable_subtitle_background": true,
+	"controller_look_deadzone": 0.16,
+	"look_acceleration": 8.0,
+	"hud_scale": 1.0
 }
 
 func _ready() -> void:
@@ -21,6 +25,8 @@ func _ready() -> void:
 	_load_user_settings()
 
 func get_setting(name: String, fallback: Variant = null) -> Variant:
+	if not _settings.has(name) and not _defaults.has(name):
+		name = _resolve_legacy_alias(name)
 	if _settings.has(name):
 		return _settings[name]
 	if _defaults.has(name):
@@ -73,3 +79,14 @@ func _load_json_dict(path: String) -> Dictionary:
 	if parsed is Dictionary:
 		return parsed as Dictionary
 	return {}
+
+func _resolve_legacy_alias(setting_name: String) -> String:
+	match setting_name:
+		"camera_fov":
+			return "fov"
+		"controller_deadzone":
+			return "controller_look_deadzone"
+		"controller_look_accel":
+			return "look_acceleration"
+		_:
+			return setting_name

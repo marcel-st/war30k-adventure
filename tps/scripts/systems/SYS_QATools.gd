@@ -15,7 +15,10 @@ func emit_basic_smoke_report() -> void:
 		"mission_state": GameState.mission_state,
 		"chapter_id": GameState.story_chapter_id,
 		"wave": GameState.current_wave,
-		"enemies_remaining": GameState.enemies_remaining
+		"enemies_remaining": GameState.enemies_remaining,
+		"mission_mode": str(GameState.get_meta("mission_mode", "wave_assault")),
+		"active_branch_choices": GameState.get_all_branch_choices(),
+		"profile_version": 2
 	}
 	if EventBus:
 		EventBus.emit_gameplay_event("qa_smoke_report", report)

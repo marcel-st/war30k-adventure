@@ -32,6 +32,11 @@ var attack_timer: float = 0.0
 var hit_react_timer: float = 0.0
 var tracked_player: CharacterBody3D = null
 var _role_profile: Dictionary = {}
+var _suppression_timer: float = 0.0
+var _reposition_target: Vector3 = Vector3.ZERO
+var _has_reposition_target: bool = false
+var _distant_throttle_accumulator: float = 0.0
+var _force_far_update_mode: bool = false
 
 func _ready() -> void:
 	gravity = ProjectSettings.get_setting("physics/3d/default_gravity", 24.0) * gravity_scale
@@ -51,8 +56,13 @@ func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
 
+	if (_force_far_update_mode or _is_far_from_player()) and _distant_throttle_accumulator < 0.08:
+		_distant_throttle_accumulator += delta
+		return
+	_distant_throttle_accumulator = 0.0
 	attack_timer = maxf(0.0, attack_timer - delta)
 	hit_react_timer = maxf(0.0, hit_react_timer - delta)
+	_suppression_timer = maxf(0.0, _suppression_timer - delta)
 	if body_mesh:
 		body_mesh.scale = body_mesh.scale.lerp(Vector3.ONE, clampf(delta * 14.0, 0.0, 1.0))
 
@@ -63,12 +73,22 @@ func _physics_process(delta: float) -> void:
 		var to_player: Vector3 = tracked_player.global_position - global_position
 		to_player.y = 0.0
 		var distance_to_player: float = to_player.length()
-		if distance_to_player > ideal_range:
+		if _has_reposition_target:
+			var to_reposition: Vector3 = _reposition_target - global_position
+			to_reposition.y = 0.0
+			if to_reposition.length() < 0.8:
+				_has_reposition_target = false
+			else:
+				desired_velocity = to_reposition.normalized() * move_speed
+		elif distance_to_player > ideal_range:
 			desired_velocity = to_player.normalized() * move_speed
 		elif distance_to_player < retreat_range:
 			desired_velocity = -to_player.normalized() * move_speed * 0.7
 		else:
-			_try_ranged_attack()
+			if _suppression_timer > 0.0:
+				desired_velocity = _flank_direction(to_player) * move_speed * 0.6
+			else:
+				_try_ranged_attack()
 		_face_towards(global_position + to_player, delta)
 
 	var horizontal_velocity: Vector3 = Vector3(velocity.x, 0.0, velocity.z)
@@ -81,6 +101,8 @@ func apply_damage(raw_damage: float) -> void:
 	if is_dead or raw_damage <= 0.0:
 		return
 	health = maxf(0.0, health - raw_damage)
+	_suppression_timer = maxf(_suppression_timer, 0.9)
+	_pick_reposition_target()
 	_enter_hit_react()
 	if health <= 0.0:
 		_die()
@@ -170,3 +192,33 @@ func _on_awareness_body_entered(body: Node) -> void:
 func _on_awareness_body_exited(body: Node) -> void:
 	if body == tracked_player:
 		tracked_player = null
+
+func _flank_direction(to_player: Vector3) -> Vector3:
+	if to_player.length_squared() < 0.001:
+		return Vector3.ZERO
+	var side: float = -1.0 if randf() < 0.5 else 1.0
+	var lateral: Vector3 = to_player.normalized().cross(Vector3.UP) * side
+	lateral.y = 0.0
+	return lateral.normalized()
+
+func _pick_reposition_target() -> void:
+	if not _can_engage_player():
+		return
+	var base_to_enemy: Vector3 = global_position - tracked_player.global_position
+	base_to_enemy.y = 0.0
+	if base_to_enemy.length_squared() <= 0.001:
+		base_to_enemy = Vector3.FORWARD
+	var flank: Vector3 = base_to_enemy.normalized().cross(Vector3.UP)
+	if randf() < 0.5:
+		flank = -flank
+	_reposition_target = global_position + flank * randf_range(2.8, 5.4)
+	_reposition_target.y = global_position.y
+	_has_reposition_target = true
+
+func _is_far_from_player() -> bool:
+	if not _can_engage_player():
+		return false
+	return global_position.distance_to(tracked_player.global_position) > 40.0
+
+func set_far_update_mode(enabled: bool) -> void:
+	_force_far_update_mode = enabled

@@ -8,6 +8,10 @@ extends CanvasLayer
 @onready var status_label: Label = $Margin/VBox/StatusLabel
 @onready var chapter_label: Label = $Margin/VBox/ChapterLabel
 @onready var progression_label: Label = $Margin/VBox/ProgressionLabel
+@onready var damage_indicator: Label = $DamageIndicator
+
+var _damage_indicator_timer: float = 0.0
+var _damage_indicator_text: String = ""
 
 func _ready() -> void:
 	GameState.player_stats_changed.connect(_on_player_stats_changed)
@@ -18,6 +22,7 @@ func _ready() -> void:
 	GameState.mission_state_changed.connect(_on_mission_state_changed)
 	GameState.story_chapter_changed.connect(_on_story_chapter_changed)
 	GameState.progression_changed.connect(_on_progression_changed)
+	GameState.event_feed_changed.connect(_on_event_feed_damage_hint)
 	_on_player_stats_changed(
 		GameState.health,
 		GameState.armor,
@@ -31,6 +36,18 @@ func _ready() -> void:
 	_on_story_chapter_changed(GameState.story_chapter_id, GameState.story_chapter_title)
 	_on_progression_changed(GameState.player_level, GameState.player_xp, GameState.player_requisition)
 	_on_objective_changed(GameState.objective_text, GameState.objective_completed)
+	_apply_hud_scale()
+	set_process(true)
+
+func _process(delta: float) -> void:
+	if _damage_indicator_timer > 0.0:
+		_damage_indicator_timer = maxf(0.0, _damage_indicator_timer - delta)
+		if damage_indicator:
+			damage_indicator.visible = _damage_indicator_timer > 0.0
+			if _damage_indicator_timer <= 0.0:
+				damage_indicator.text = ""
+	if int(Time.get_ticks_msec()) % 4000 < 34:
+		_apply_hud_scale()
 
 func _on_player_stats_changed(health: float, armor: float, magazine: int, reserve: int) -> void:
 	if stats_label:
@@ -57,6 +74,11 @@ func _on_event_feed_changed(text: String) -> void:
 	if not event_label:
 		return
 	event_label.text = text
+	if _damage_indicator_text != "":
+		if damage_indicator:
+			damage_indicator.text = _damage_indicator_text
+			damage_indicator.visible = true
+			damage_indicator.modulate.a = clampf(_damage_indicator_timer / 0.9, 0.0, 1.0)
 
 func _on_mission_state_changed(run_state: String, _reason: String) -> void:
 	if not status_label:
@@ -76,3 +98,21 @@ func _on_story_chapter_changed(_chapter_id: String, chapter_title: String) -> vo
 func _on_progression_changed(level: int, xp: int, requisition: int) -> void:
 	if progression_label:
 		progression_label.text = "Lvl %d | XP %d | Req %d" % [level, xp, requisition]
+
+func _on_event_feed_damage_hint(text: String) -> void:
+	if not text.begins_with("Incoming fire"):
+		return
+	_damage_indicator_text = text
+	_damage_indicator_timer = 0.9
+	if damage_indicator:
+		damage_indicator.text = text
+		damage_indicator.visible = true
+		damage_indicator.modulate.a = 1.0
+
+func _apply_hud_scale() -> void:
+	if not SettingsSystem or not SettingsSystem.has_method("get_setting"):
+		return
+	var hud_scale: float = float(SettingsSystem.get_setting("hud_scale", 1.0))
+	hud_scale = clampf(hud_scale, 0.8, 1.5)
+	if $Margin:
+		$Margin.scale = Vector2(hud_scale, hud_scale)

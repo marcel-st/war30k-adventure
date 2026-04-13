@@ -212,6 +212,22 @@ func transition_music(bank_key: String) -> void:
 	)
 
 func _on_gameplay_event(event_name: String, payload: Dictionary) -> void:
+	if event_name == "combat.player_hit":
+		var health_ratio: float = 1.0
+		if GameState and GameState.MAX_HEALTH > 0.0:
+			health_ratio = clampf(GameState.health / GameState.MAX_HEALTH, 0.0, 1.0)
+		if health_ratio < 0.28:
+			transition_music("music_intermission")
+		elif health_ratio < 0.6:
+			transition_music("music_combat_b")
+	if event_name == "mission.wave_started":
+		var wave_number: int = int(payload.get("wave", 1))
+		if wave_number >= 3:
+			transition_music("music_combat_b")
+	if event_name == "mission.optional_started":
+		transition_music("music_combat_b")
+	if event_name == "mission.optional_completed":
+		transition_music("music_combat_a")
 	play_event(event_name, payload)
 
 func _on_settings_changed(setting_name: String, value: Variant) -> void:

@@ -1,14 +1,18 @@
 {
-  "settings": {
+  "defaults": {
     "master_volume": 0.9,
     "music_volume": 0.8,
     "sfx_volume": 0.9,
-    "mouse_sensitivity": 1.0,
-    "stick_sensitivity": 1.0,
-    "camera_fov": 75.0,
-    "controller_vibration": true,
+    "mouse_sensitivity": 0.0019,
     "aim_assist_strength": 0.2,
+    "fov": 75.0,
+    "enable_subtitle_background": true,
+    "stick_sensitivity": 2.2,
+    "controller_look_deadzone": 0.16,
+    "look_acceleration": 8.0,
+    "camera_fov": 75.0,
+    "hud_scale": 1.0,
     "subtitle_scale": 1.0,
-    "subtitle_background": true
+    "adaptive_music": true
   }
 }

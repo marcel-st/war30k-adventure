@@ -40,6 +40,8 @@ func _physics_process(delta: float) -> void:
 				continue
 			effect_remaining = maxf(0.0, effect_remaining - delta)
 			_active_effect_timers[effect_id] = effect_remaining
+	if GameState:
+		GameState.tick_ability_cooldowns(delta)
 
 func trigger_ability(ability_id: String) -> bool:
 	if not _profiles.has(ability_id):
@@ -49,12 +51,16 @@ func trigger_ability(ability_id: String) -> bool:
 		return false
 	var profile: Dictionary = _profiles[ability_id] as Dictionary
 	var cooldown: float = float(profile.get("cooldown", 0.0))
+	var progression: Node = GameState.get_node_or_null("Progression")
+	if progression and progression.has_method("get_ability_cooldown_scale"):
+		cooldown *= float(progression.get_ability_cooldown_scale())
 	_cooldowns[ability_id] = cooldown
 	var effect: Dictionary = profile.get("effect", {}) as Dictionary
 	_active_effect_timers[ability_id] = float(effect.get("duration", 0.0))
 	_apply_effect(profile)
 	emit_signal("ability_triggered", ability_id)
-	emit_signal("ability_cooldown_changed", ability_id, cooldown, cooldown)
+	var cooldown_display_total: float = float(profile.get("cooldown", cooldown))
+	emit_signal("ability_cooldown_changed", ability_id, cooldown, cooldown_display_total)
 	if GameState:
 		GameState.ability_cooldowns[ability_id] = cooldown
 		GameState.emit_signal("ability_cooldowns_changed", GameState.ability_cooldowns.duplicate(true))

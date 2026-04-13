@@ -24,6 +24,7 @@ var tracked_player: CharacterBody3D = null
 var _hit_flash_timer: float = 0.0
 var _base_scale: Vector3 = Vector3.ONE
 var _commander_bonus_scale: float = 1.0
+var _lod_tick_accumulator: float = 0.0
 
 func _ready() -> void:
 	gravity = ProjectSettings.get_setting("physics/3d/default_gravity", 24.0) * gravity_scale
@@ -40,6 +41,14 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
+
+	if tracked_player and is_instance_valid(tracked_player):
+		var distance_to_player: float = global_position.distance_to(tracked_player.global_position)
+		if distance_to_player > 26.0:
+			_lod_tick_accumulator += delta
+			if _lod_tick_accumulator < 0.05:
+				return
+			_lod_tick_accumulator = 0.0
 
 	attack_timer = maxf(0.0, attack_timer - delta)
 	_update_commander_bonus()
@@ -161,3 +170,7 @@ func _update_commander_bonus() -> void:
 		if commander_node.global_position.distance_to(global_position) <= 14.0:
 			_commander_bonus_scale = 1.18
 			return
+
+func set_far_update_mode(is_far: bool) -> void:
+	if is_far:
+		_lod_tick_accumulator = maxf(_lod_tick_accumulator, 0.02)

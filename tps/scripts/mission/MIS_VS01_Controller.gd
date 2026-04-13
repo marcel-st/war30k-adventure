@@ -55,6 +55,14 @@ var _adaptive_spawn_interval_scale: float = 1.0
 var _current_branch_choice: String = "default_path"
 var _branch_consequence_library: Dictionary = {}
 var _active_branch_consequence: Dictionary = {}
+var _mission_mode: String = "assault"
+var _sabotage_required_ticks: int = 0
+var _sabotage_progress_ticks: int = 0
+var _sabotage_active: bool = false
+var _sabotage_completed: bool = false
+var _sabotage_tick_timer: float = 0.0
+var _sabotage_enemy_gate: int = 2
+var _sabotage_radius: float = 4.2
 
 const ENEMY_COMPACT_INTERVAL: float = 0.5
 
@@ -78,6 +86,7 @@ func _ready() -> void:
 		story_systems.request_contact("ch1_contact_ignatius")
 	_chapter_triggered[1] = true
 	_setup_mission_profile()
+	GameState.set_meta("mission_mode", _mission_mode)
 	_apply_branch_choice("default_path")
 	extraction_zone.monitoring = false
 	GameState.configure_projectile_pool_container(get_node_or_null("ProjectileContainer"))
@@ -98,6 +107,7 @@ func _physics_process(_delta: float) -> void:
 		_compact_active_enemies()
 	if _active_enemies.is_empty() and not _combat_completed and not _is_spawning_wave:
 		_start_next_wave()
+	_process_sabotage_objective(_delta)
 
 func _on_extraction_body_entered(body: Node) -> void:
 	if body.is_in_group("player"):
@@ -109,6 +119,7 @@ func _on_extraction_body_entered(body: Node) -> void:
 		if story_systems and story_systems.has_method("request_contact"):
 			story_systems.request_contact("ch4_contact_relay")
 		GameState.complete_objective("Extraction reached. Loyalist warning secured.")
+		_finalize_mission_rewards()
 		GameState.set_mission_state("victory", "Extraction reached")
 		_can_restart = true
 		_restart_debounce = 0.25
@@ -146,6 +157,8 @@ func _start_next_wave() -> void:
 	spawn_interval *= _adaptive_spawn_interval_scale
 	var total_count: int = melee_count + ranged_count + elite_count
 	var objective_text: String = str(wave_data.get("objective", "Eliminate all enemies in wave %d." % (_wave_index + 1)))
+	if _mission_mode == "sabotage" and _wave_index == _waves.size() - 1:
+		objective_text = "Sabotage relay uplink while holding off traitor counterfire."
 	GameState.set_objective("%s (%d/%d)" % [objective_text, _wave_index + 1, _waves.size()])
 	GameState.set_wave_progress(_wave_index + 1, _waves.size())
 	GameState.set_enemies_remaining(total_count)
@@ -168,6 +181,8 @@ func _start_next_wave() -> void:
 	_is_spawning_wave = false
 	_start_wave_events(wave_data)
 	_wave_index += 1
+	if _mission_mode == "sabotage" and _wave_index >= _waves.size():
+		_activate_sabotage_phase()
 
 func _spawn_wave_units(melee_count: int, ranged_count: int, elite_count: int, interval: float) -> void:
 	var spawn_order: Array[PackedScene] = []
@@ -280,7 +295,19 @@ func _spawn_boss_encounter() -> void:
 	GameState.push_event_message("Boss contact: Harbinger of Ruin enters the field.")
 	GameState.set_objective("Defeat the Harbinger and secure extraction.")
 	var spawn_position: Vector3 = _pick_spawn_position(999)
-	_spawn_unit(BOSS_SCENE, spawn_position + Vector3(0.0, 0.0, -3.0))
+	var boss_node: Node3D = BOSS_SCENE.instantiate()
+	if boss_node.has_method("set_target_player"):
+		boss_node.set_target_player(get_node_or_null("Player"))
+	enemy_container.add_child(boss_node)
+	boss_node.global_position = spawn_position + Vector3(0.0, 0.0, -3.0)
+	_active_enemies.append(boss_node)
+	boss_node.add_to_group("enemy")
+	GameState.set_enemies_remaining(_active_enemies.size())
+	if boss_node.has_signal("counter_window_opened"):
+		boss_node.counter_window_opened.connect(_on_boss_counter_window_opened)
+	if boss_node.has_signal("counter_window_closed"):
+		boss_node.counter_window_closed.connect(_on_boss_counter_window_closed)
+	boss_node.tree_exited.connect(_on_enemy_tree_exited.bind(boss_node))
 
 func _on_enemy_tree_exited(enemy: Node3D) -> void:
 	_active_enemies.erase(enemy)
@@ -294,6 +321,7 @@ func _on_mission_state_changed(new_state: String) -> void:
 		_restart_debounce = 0.25
 		_encounter_token += 1
 		extraction_zone.monitoring = false
+		_sabotage_active = false
 
 func _on_story_trigger_body_entered(body: Node, chapter_number: int) -> void:
 	if not body.is_in_group("player"):
@@ -347,6 +375,17 @@ func _setup_mission_profile() -> void:
 		_bonus_objective_active = true
 		_bonus_objective_completed = false
 		GameState.push_event_message("Optional objective active: complete run with no deaths.")
+	var mission_modes_variant: Variant = profile.get("mission_modes", [])
+	if mission_modes_variant is Array:
+		var mission_modes: Array = mission_modes_variant as Array
+		if mission_modes.has("sabotage"):
+			_mission_mode = "sabotage"
+	var sabotage_variant: Variant = profile.get("sabotage_objective", {})
+	if sabotage_variant is Dictionary:
+		var sabotage_dict: Dictionary = sabotage_variant as Dictionary
+		_sabotage_required_ticks = maxi(4, int(sabotage_dict.get("required_ticks", 8)))
+		_sabotage_enemy_gate = maxi(1, int(sabotage_dict.get("enemy_gate", 2)))
+		_sabotage_radius = maxf(2.0, float(sabotage_dict.get("radius", 4.2)))
 
 func _finish_optional_objectives() -> void:
 	if not _bonus_objective_active or _bonus_objective_completed:
@@ -392,9 +431,63 @@ func _apply_branch_choice(choice_id: String) -> void:
 	match choice_id:
 		"secure_relay":
 			_adaptive_spawn_interval_scale = minf(_adaptive_spawn_interval_scale * 0.92, 1.05)
+			_sabotage_required_ticks = maxi(4, _sabotage_required_ticks - 1)
 		"breach_aggressive":
 			_adaptive_reinforcement_scale = minf(_adaptive_reinforcement_scale * 1.14, 1.35)
 		"hold_the_line":
 			_adaptive_spawn_interval_scale = maxf(_adaptive_spawn_interval_scale * 1.04, 0.78)
 		_:
 			pass
+
+func _on_boss_counter_window_opened(window_name: String) -> void:
+	GameState.push_event_message("Counter window: %s exposed. Focus fire!" % window_name.capitalize())
+
+func _on_boss_counter_window_closed(window_name: String, was_exploited: bool) -> void:
+	if was_exploited:
+		GameState.push_event_message("Counter successful: %s disrupted." % window_name.capitalize())
+	else:
+		GameState.push_event_message("Counter missed: %s attack completed." % window_name.capitalize())
+
+func _activate_sabotage_phase() -> void:
+	if _sabotage_completed or _sabotage_active:
+		return
+	_sabotage_active = true
+	_sabotage_tick_timer = 1.0
+	_sabotage_progress_ticks = 0
+	GameState.push_event_message("Relay sabotage initiated. Stay on uplink while keeping hostiles down.")
+	GameState.set_objective("Sabotage uplink progress %d/%d" % [_sabotage_progress_ticks, _sabotage_required_ticks])
+
+func _process_sabotage_objective(delta: float) -> void:
+	if not _sabotage_active or _sabotage_completed:
+		return
+	if _mission_failed or GameState.mission_state == "failed":
+		return
+	var player: Node3D = get_node_or_null("Player")
+	if player == null:
+		return
+	_sabotage_tick_timer = maxf(0.0, _sabotage_tick_timer - delta)
+	if _sabotage_tick_timer > 0.0:
+		return
+	_sabotage_tick_timer = 1.0
+	if _active_enemies.size() > _sabotage_enemy_gate:
+		GameState.push_event_message("Uplink disrupted by enemy pressure. Clear nearby traitors.")
+		return
+	var relay_anchor: Vector3 = extraction_zone.global_position
+	var in_range: bool = player.global_position.distance_to(relay_anchor) <= _sabotage_radius
+	if not in_range:
+		GameState.push_event_message("Move to relay zone to continue sabotage.")
+		return
+	_sabotage_progress_ticks += 1
+	GameState.set_objective("Sabotage uplink progress %d/%d" % [_sabotage_progress_ticks, _sabotage_required_ticks])
+	if _sabotage_progress_ticks >= _sabotage_required_ticks:
+		_sabotage_completed = true
+		_sabotage_active = false
+		GameState.push_event_message("Relay sabotage complete. Extraction corridor stabilized.")
+		if not _boss_spawned:
+			_spawn_boss_encounter()
+
+func _finalize_mission_rewards() -> void:
+	var progression: Node = GameState.get_node_or_null("Progression")
+	if progression and progression.has_method("award_mission"):
+		progression.award_mission(true, _bonus_objective_completed)
+	GameState.gain_progression(90, 60)

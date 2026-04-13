@@ -18,6 +18,7 @@ var _is_reloading: bool = false
 var _recent_fire_timer: float = 0.0
 var _spread_bloom: float = 0.0
 var _damage_multiplier: float = 1.0
+var _spread_multiplier: float = 1.0
 var _base_damage: float = 24.0
 var _tracer_ttl: float = 0.08
 
@@ -38,6 +39,10 @@ func _ready() -> void:
 	var progression: Node = GameState.get_node_or_null("Progression")
 	if progression and progression.has_method("get_damage_multiplier"):
 		_damage_multiplier = progression.get_damage_multiplier()
+	if progression and progression.has_method("get_spread_multiplier"):
+		_spread_multiplier = progression.get_spread_multiplier()
+	if progression and progression.has_signal("modifiers_changed"):
+		progression.modifiers_changed.connect(_on_progression_modifiers_changed)
 	if EventBus:
 		EventBus.emit_event("combat.weapon_ready", {"weapon_id": "boltgun"})
 
@@ -65,7 +70,7 @@ func trigger_fire(camera: Camera3D) -> void:
 	_fire_cooldown = 1.0 / max(0.1, fire_rate)
 	_recent_fire_timer = 0.12
 	_spread_bloom = clampf(_spread_bloom + 0.11, 0.0, 0.55)
-	var spread: float = _spread_bloom
+	var spread: float = _spread_bloom * _spread_multiplier
 	if Input.is_action_pressed("aim"):
 		spread *= 0.45
 	var from: Vector3 = camera.global_position
@@ -144,3 +149,10 @@ func get_move_speed_multiplier() -> float:
 	if Input.is_action_pressed("aim"):
 		return move_speed_penalty_while_aiming
 	return 1.0
+
+func _on_progression_modifiers_changed() -> void:
+	var progression: Node = GameState.get_node_or_null("Progression")
+	if progression and progression.has_method("get_damage_multiplier"):
+		_damage_multiplier = progression.get_damage_multiplier()
+	if progression and progression.has_method("get_spread_multiplier"):
+		_spread_multiplier = progression.get_spread_multiplier()
