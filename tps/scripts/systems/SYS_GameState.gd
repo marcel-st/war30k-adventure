@@ -146,6 +146,8 @@ func set_encounter_event(text: String) -> void:
 	encounter_event_text = text
 	event_feed_text = text
 	emit_signal("event_feed_changed", event_feed_text)
+	if AudioManager:
+		AudioManager.play_ui_event("objective_update")
 
 func push_event_message(text: String) -> void:
 	set_encounter_event(text)

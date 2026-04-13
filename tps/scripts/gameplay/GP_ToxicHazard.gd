@@ -17,6 +17,8 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 	configure(radius, damage_per_tick, lifetime)
+	if EventBus:
+		EventBus.emit_event("ability.toxic_hazard_spawned")
 
 func configure(new_radius: float, new_damage_per_tick: float, new_lifetime: float, owner_node: Node = null) -> void:
 	radius = maxf(0.6, new_radius)
@@ -47,6 +49,7 @@ func _physics_process(delta: float) -> void:
 		queue_free()
 
 func _apply_tick_damage() -> void:
+	var applied_tick: bool = false
 	var survivors: Array[Node] = []
 	for body in _affected_bodies:
 		if not is_instance_valid(body):
@@ -56,10 +59,14 @@ func _apply_tick_damage() -> void:
 			continue
 		if body.is_in_group("player") and body.has_method("apply_damage_from_hazard"):
 			body.apply_damage_from_hazard(damage_per_tick, global_position)
+			applied_tick = true
 			continue
 		if body.has_method("apply_damage"):
 			body.apply_damage(damage_per_tick)
+			applied_tick = true
 	_affected_bodies = survivors
+	if applied_tick and EventBus:
+		EventBus.emit_event("ability.toxic_hazard_tick")
 
 func _on_body_entered(body: Node) -> void:
 	if _affected_bodies.has(body):

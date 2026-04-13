@@ -9,3 +9,5 @@ build/
 tps/.godot/
 tps/.import/
 tps/export_presets.cfg
+tps/icon.svg.import
+*.uid

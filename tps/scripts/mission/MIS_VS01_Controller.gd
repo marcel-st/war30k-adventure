@@ -150,6 +150,8 @@ func _start_next_wave() -> void:
 	GameState.set_wave_progress(_wave_index + 1, _waves.size())
 	GameState.set_enemies_remaining(total_count)
 	GameState.push_event_message("Wave %d started: %d hostiles." % [_wave_index + 1, total_count])
+	if EventBus:
+		EventBus.emit_event("mission.wave_started", {"wave": _wave_index + 1, "hostiles": total_count})
 	if story_systems and story_systems.has_method("request_contact"):
 		if _wave_index == 0:
 			story_systems.request_contact("ch1_contact_macer")
@@ -385,6 +387,8 @@ func _apply_branch_choice(choice_id: String) -> void:
 		var consequence_variant: Variant = _branch_consequence_library.get(choice_id, {})
 		if consequence_variant is Dictionary:
 			_active_branch_consequence = consequence_variant as Dictionary
+	if EventBus:
+		EventBus.emit_event("mission.branch_choice_applied", {"choice_id": choice_id})
 	match choice_id:
 		"secure_relay":
 			_adaptive_spawn_interval_scale = minf(_adaptive_spawn_interval_scale * 0.92, 1.05)

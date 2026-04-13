@@ -1,0 +1,116 @@
+{
+  "generated_by": "cursor-agent",
+  "generated_on": "2026-04-12",
+  "tracks": [
+    {
+      "path": "assets/audio/music/combat_hardrock_01.wav",
+      "category": "music",
+      "source_title": "Boss Battle #6 Metal V1",
+      "source_url": "https://opengameart.org/content/boss-battle-6-metal",
+      "download_url": "https://opengameart.org/sites/default/files/Boss%20Battle%206%20Metal%20V1.wav",
+      "author": "nene",
+      "license": "CC0",
+      "attribution_required": false
+    },
+    {
+      "path": "assets/audio/music/combat_hardrock_02.ogg",
+      "category": "music",
+      "source_title": "Last Stand Lets Go",
+      "source_url": "https://opengameart.org/content/last-stand-lets-go",
+      "download_url": "https://opengameart.org/sites/default/files/Peachtea-LastStandLetsGo_0.ogg",
+      "author": "Noah Cedeno (Peachtea)",
+      "license": "CC0",
+      "attribution_required": false
+    },
+    {
+      "path": "assets/audio/music/intermission_rock_ballad_01.ogg",
+      "category": "music",
+      "source_title": "R&B Rock Fusion Song!",
+      "source_url": "https://opengameart.org/content/rb-rock-fusion-song-1",
+      "download_url": "https://opengameart.org/sites/default/files/rb_rock_song_0.ogg",
+      "author": "Lukarikid",
+      "license": "CC0",
+      "attribution_required": false
+    },
+    {
+      "path": "assets/audio/sfx/combat/weapon_fire_01.ogg",
+      "category": "sfx_combat",
+      "source_title": "Sci-Fi Sounds",
+      "source_url": "https://opengameart.org/content/sci-fi-sounds",
+      "download_url": "https://opengameart.org/sites/default/files/sci-fi_sounds.zip",
+      "author": "Kenney",
+      "license": "CC0",
+      "attribution_required": false
+    },
+    {
+      "path": "assets/audio/sfx/combat/weapon_fire_02.ogg",
+      "category": "sfx_combat",
+      "source_title": "Sci-Fi Sounds",
+      "source_url": "https://opengameart.org/content/sci-fi-sounds",
+      "download_url": "https://opengameart.org/sites/default/files/sci-fi_sounds.zip",
+      "author": "Kenney",
+      "license": "CC0",
+      "attribution_required": false
+    },
+    {
+      "path": "assets/audio/sfx/combat/reload_01.ogg",
+      "category": "sfx_combat",
+      "source_title": "Platformer Sounds: Terminal, Interaction, Door, Shots, Bang and Footsteps",
+      "source_url": "https://opengameart.org/content/platformer-sounds-terminal-interaction-door-shots-bang-and-footsteps",
+      "download_url": "https://opengameart.org/sites/default/files/yd-Sounds.zip",
+      "author": "yd",
+      "license": "CC0",
+      "attribution_required": false
+    },
+    {
+      "path": "assets/audio/sfx/combat/enemy_fire_01.ogg",
+      "category": "sfx_combat",
+      "source_title": "50 CC0 Sci-Fi SFX",
+      "source_url": "https://opengameart.org/content/50-cc0-sci-fi-sfx",
+      "download_url": "https://opengameart.org/sites/default/files/sci-fi-sfx.zip",
+      "author": "rubberduck",
+      "license": "CC0",
+      "attribution_required": false
+    },
+    {
+      "path": "assets/audio/sfx/combat/enemy_fire_02.ogg",
+      "category": "sfx_combat",
+      "source_title": "50 CC0 Sci-Fi SFX",
+      "source_url": "https://opengameart.org/content/50-cc0-sci-fi-sfx",
+      "download_url": "https://opengameart.org/sites/default/files/sci-fi-sfx.zip",
+      "author": "rubberduck",
+      "license": "CC0",
+      "attribution_required": false
+    },
+    {
+      "path": "assets/audio/sfx/footsteps/step_metal_01.wav",
+      "category": "sfx_footsteps",
+      "source_title": "Metal footsteps on concrete",
+      "source_url": "https://opengameart.org/content/metal-footsteps-on-concrete",
+      "download_url": "https://opengameart.org/sites/default/files/metal_steps_48k24b.7z",
+      "author": "Thimras",
+      "license": "CC0",
+      "attribution_required": false
+    },
+    {
+      "path": "assets/audio/sfx/ambience/warzone_ambient_loop_01.ogg",
+      "category": "sfx_ambience",
+      "source_title": "30 CC0 SFX loops",
+      "source_url": "https://opengameart.org/content/30-cc0-sfx-loops",
+      "download_url": "https://opengameart.org/sites/default/files/sfx_loops.zip",
+      "author": "rubberduck",
+      "license": "CC0",
+      "attribution_required": false
+    },
+    {
+      "path": "assets/audio/sfx/ambience/machine_ambient_loop_01.ogg",
+      "category": "sfx_ambience",
+      "source_title": "100 CC0 SFX #2",
+      "source_url": "https://opengameart.org/content/100-cc0-sfx-2",
+      "download_url": "https://opengameart.org/sites/default/files/sfx_100_v2.zip",
+      "author": "rubberduck",
+      "license": "CC0",
+      "attribution_required": false
+    }
+  ]
+}

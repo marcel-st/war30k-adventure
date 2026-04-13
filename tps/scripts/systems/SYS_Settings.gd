@@ -10,9 +10,9 @@ var _defaults: Dictionary = {
 	"mouse_sensitivity": 0.0019,
 	"aim_assist_strength": 0.0,
 	"fov": 75.0,
-	"master_volume_db": 0.0,
-	"sfx_volume_db": 0.0,
-	"music_volume_db": 0.0,
+	"master_volume": 0.9,
+	"sfx_volume": 0.9,
+	"music_volume": 0.8,
 	"enable_subtitle_background": true
 }
 
@@ -43,6 +43,8 @@ func _load_defaults() -> void:
 	if data.is_empty():
 		return
 	var defaults_variant: Variant = data.get("defaults", {})
+	if not (defaults_variant is Dictionary):
+		defaults_variant = data.get("settings", {})
 	if defaults_variant is Dictionary:
 		_defaults = (defaults_variant as Dictionary).duplicate(true)
 

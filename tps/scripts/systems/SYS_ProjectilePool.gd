@@ -46,9 +46,7 @@ func recycle_enemy_projectile(projectile: Node) -> void:
 	if _available_enemy_projectiles.size() >= max_pool_size:
 		projectile.queue_free()
 		return
-	if projectile.has_method("deactivate"):
-		projectile.deactivate()
-	elif projectile.has_method("reset_for_pool"):
+	if projectile.has_method("reset_for_pool"):
 		projectile.reset_for_pool()
 	else:
 		projectile.set_physics_process(false)
@@ -70,9 +68,7 @@ func _prewarm_enemy_projectiles() -> void:
 		projectile.set_meta("pooled_projectile", true)
 		if _container:
 			_container.add_child(projectile)
-		if projectile.has_method("deactivate"):
-			projectile.deactivate()
-		elif projectile.has_method("reset_for_pool"):
+		if projectile.has_method("reset_for_pool"):
 			projectile.reset_for_pool()
 		else:
 			projectile.set_physics_process(false)

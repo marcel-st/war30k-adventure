@@ -43,6 +43,8 @@ func _ready() -> void:
 	awareness_area.body_entered.connect(_on_awareness_body_entered)
 	awareness_area.body_exited.connect(_on_awareness_body_exited)
 	GameState.push_event_message("Boss contact: Harbinger of Ruin")
+	if EventBus:
+		EventBus.emit_event("audio.play_music", {"cue": "combat_hardrock_02", "fade": 1.1})
 
 func _physics_process(delta: float) -> void:
 	if is_dead:
@@ -105,6 +107,8 @@ func _try_strike_attack() -> void:
 	_strike_windup_timer = maxf(0.22, 0.45 - 0.05 * float(_phase - 1))
 	_set_telegraph_state(Color(1.0, 0.56, 0.22, 0.85), 1.35)
 	GameState.push_event_message("Harbinger winds up a crushing strike!")
+	if EventBus:
+		EventBus.emit_event("audio.play_sfx", {"cue": "boss_telegraph_strike", "volume_db": -1.0})
 
 func _try_nova_attack(distance_to_player: float) -> void:
 	if nova_timer > 0.0:
@@ -118,6 +122,8 @@ func _try_nova_attack(distance_to_player: float) -> void:
 	_nova_windup_timer = maxf(0.55, 1.0 - 0.08 * float(_phase - 1))
 	_set_telegraph_state(Color(0.44, 1.0, 0.35, 0.82), 2.2)
 	GameState.push_event_message("Harbinger channels plague nova!")
+	if EventBus:
+		EventBus.emit_event("audio.play_sfx", {"cue": "boss_telegraph_nova", "volume_db": -0.5})
 
 func _face_towards(target_position: Vector3, delta: float) -> void:
 	var to_target: Vector3 = target_position - global_position
@@ -159,6 +165,9 @@ func _die() -> void:
 		visual_root.scale = Vector3(1.2, 0.2, 1.2)
 	_hide_telegraph()
 	GameState.push_event_message("Boss neutralized.")
+	if EventBus:
+		EventBus.emit_event("audio.play_sfx", {"cue": "enemy_die", "volume_db": 1.0})
+		EventBus.emit_event("audio.play_music", {"cue": "intermission_rock_ballad_01", "fade": 1.4})
 	emit_signal("died", self)
 	var timer: SceneTreeTimer = get_tree().create_timer(corpse_lifetime)
 	timer.timeout.connect(queue_free)

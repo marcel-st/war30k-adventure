@@ -188,6 +188,15 @@ godot4 --editor
 
 If your binary is named differently on your machine, use `godot` instead of `godot4`.
 
+### TPS Audio Packs (New)
+
+The TPS branch now includes integrated third-party audio assets (SFX + music) sourced from open-license repositories.
+
+- Asset manifest: `tps/audio/ASSET_MANIFEST.json`
+- License and attribution notes: `tps/audio/THIRD_PARTY_AUDIO_LICENSES.md`
+
+The runtime audio system is handled by `AudioManager` (autoload), with separate `Music`, `SFX`, and `UI` buses.
+
 ## Regenerate Spritesheets (Optional)
 
 The project includes procedural spritesheet generation with top-edge armor highlights (30K style edge-lighting pass):

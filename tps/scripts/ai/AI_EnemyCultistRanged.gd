@@ -107,6 +107,8 @@ func _try_ranged_attack() -> void:
 	if target_player == null or not is_instance_valid(target_player):
 		return
 	attack_timer = attack_cooldown
+	if EventBus:
+		EventBus.emit_event("combat.enemy_fire", {"position": muzzle.global_position})
 	if projectile_pool == null:
 		projectile_pool = GameState.get_node_or_null("ProjectilePool")
 	if projectile_pool and projectile_pool.has_method("spawn_enemy_projectile"):
@@ -155,6 +157,8 @@ func _die() -> void:
 	awareness_area.monitoring = false
 	if visual_root:
 		visual_root.scale = Vector3(1.0, 0.25, 1.0)
+	if EventBus:
+		EventBus.emit_event("combat.enemy_died", {"enemy_type": "cultist", "position": global_position})
 	emit_signal("died", self)
 	var timer: SceneTreeTimer = get_tree().create_timer(corpse_lifetime)
 	timer.timeout.connect(queue_free)

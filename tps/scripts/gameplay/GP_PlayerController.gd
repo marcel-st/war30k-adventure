@@ -30,6 +30,7 @@ var _hazard_resist_ratio: float = 0.0
 var _hazard_resist_timer: float = 0.0
 var _move_buff_bonus: float = 0.0
 var _move_buff_timer: float = 0.0
+var _footstep_timer: float = 0.0
 
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -90,6 +91,10 @@ func _process_movement(delta: float) -> void:
 	horiz_velocity = horiz_velocity.lerp(target_velocity, lerp_factor)
 	velocity.x = horiz_velocity.x
 	velocity.z = horiz_velocity.z
+	_footstep_timer = maxf(0.0, _footstep_timer - delta)
+	if input_2d.length() > 0.15 and is_on_floor() and _footstep_timer <= 0.0:
+		_emit_footstep_sfx()
+		_footstep_timer = 0.24 if Input.is_action_pressed("sprint") else 0.34
 
 func _process_aim_rotation(delta: float) -> void:
 	var look_input: Vector2 = Vector2.ZERO
@@ -122,6 +127,8 @@ func _process_combat() -> void:
 func apply_damage(raw_damage: float, _source_position: Vector3 = Vector3.ZERO) -> void:
 	if raw_damage <= 0.0 or health <= 0.0:
 		return
+	if EventBus and EventBus.has_method("emit_event"):
+		EventBus.emit_event("combat.player_hit", {"damage": raw_damage, "position": global_position})
 	var mitigated_damage: float = raw_damage * (1.0 - _damage_reduction_ratio)
 	var absorbed: float = min(armor, mitigated_damage * 0.65)
 	armor -= absorbed
@@ -198,6 +205,11 @@ func spawn_toxic_grenade(radius: float, damage_per_tick: float, duration: float)
 	if hazard.has_method("set_owner_node"):
 		hazard.set_owner_node(self)
 	get_tree().current_scene.add_child(hazard)
+	if EventBus and EventBus.has_method("emit_event"):
+		EventBus.emit_event("ability.toxic_grenade_spawned", {
+			"radius": radius,
+			"duration": duration
+		})
 	GameState.push_event_message("Toxic hazard deployed.")
 
 func _tick_temporary_effects(delta: float) -> void:
@@ -213,3 +225,10 @@ func _tick_temporary_effects(delta: float) -> void:
 		_move_buff_timer = maxf(0.0, _move_buff_timer - delta)
 		if _move_buff_timer <= 0.0:
 			_move_buff_bonus = 0.0
+
+func _emit_footstep_sfx() -> void:
+	if not EventBus:
+		return
+	EventBus.emit_event("footstep.metal", {"position": global_position, "pitch": randf_range(0.96, 1.03)})
+
+
