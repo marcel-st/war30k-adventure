@@ -1,211 +1,146 @@
-# Execution Backlog - Full TPS Improvement Program
+# Execution Backlog - TPS Mainline Follow-up
 
-This backlog converts the roadmap into concrete, file-targeted implementation tasks with acceptance criteria.
+This backlog reflects the state after merging the TPS setup, narrative campaign, quality sprint,
+and audio integration branches into `main`.
 
----
-
-## Phase 0 - Foundation (data-driven runtime)
-
-### Task F0-1: Add centralized gameplay data packs
-- **Files**
-  - `tps/data/combat/weapon_profiles.json`
-  - `tps/data/ai/squad_roles.json`
-  - `tps/data/abilities/ability_definitions.json`
-  - `tps/data/missions/mission_templates.json`
-  - `tps/data/progression/progression_tree.json`
-  - `tps/data/bosses/boss_profiles.json`
-  - `tps/data/ux/settings_schema.json`
-  - `tps/data/qa/runtime_checklist.json`
-  - `tps/data/profile/default_profile.json`
-- **Acceptance**
-  - All files parse as JSON.
-  - Runtime systems consume at least one field from each core domain file.
-
-### Task F0-2: Add runtime service singletons
-- **Files**
-  - `tps/scripts/systems/SYS_EventBus.gd`
-  - `tps/scripts/systems/SYS_ProfileManager.gd`
-  - `tps/scripts/systems/SYS_SquadDirector.gd`
-  - `tps/scenes/systems/SCN_SYS_GameState.tscn`
-  - `tps/scripts/systems/SYS_GameState.gd`
-- **Acceptance**
-  - GameState exposes wrappers for event bus/profile/projectile pool/tactical director.
-  - Mission and gameplay scripts can emit and consume service events without direct tight coupling.
-
-### Task F0-3: Add debug/runtime toggles
-- **Files**
-  - `tps/scripts/systems/SYS_GameState.gd`
-  - `tps/scripts/mission/MIS_VS01_Controller.gd`
-- **Acceptance**
-  - Toggleable runtime flags exist for invulnerability and wave skip hooks.
-  - Hooks are no-op in normal play unless explicitly toggled.
+Each item is scoped as a forward task from the current implementation baseline.
 
 ---
 
-## Phase 1 - Combat feel pass
+## Completed baseline now on `main`
 
-### Task F1-1: Data-driven boltgun handling
+- Data-driven core domains are in place (`tps/data/*`), including combat, AI, abilities,
+  missions, progression, settings defaults, and QA matrix.
+- Runtime service autoloads are active: `GameState`, `EventBus`, `DebugTools`, `SettingsSystem`,
+  `AudioManager`, `QATools`, `CombatData`, `AbilitySystem`, `Progression`.
+- Mission runtime includes adaptive pressure scaling and branch consequence application.
+- Narrative runtime includes chapter intros, contact dialogues, and cutscene direction.
+- Boss encounter and telegraph pass are implemented.
+- Audio event routing and open-license asset integration are implemented.
+
+---
+
+## Phase A - Combat and weapon tuning pass
+
+### Task A1: Externalize and tune recoil/spread envelopes
 - **Files**
   - `tps/scripts/weapons/WPN_Boltgun.gd`
   - `tps/data/combat/weapon_profiles.json`
 - **Acceptance**
-  - Bloom/spread and recoil values load from profile data.
-  - Fire feel differs between first shot and sustained fire.
+  - Spread/recoil envelope values are fully profile-driven.
+  - Weapon feel can be changed without script edits.
 
-### Task F1-2: Hit feedback UX hooks
+### Task A2: Differentiate enemy hit reactions by archetype
 - **Files**
-  - `tps/scripts/ui/UI_HUDController.gd`
-  - `tps/scenes/ui/SCN_UI_HUD.tscn`
-  - `tps/scripts/systems/SYS_EventBus.gd`
-- **Acceptance**
-  - Hit confirmation appears on successful shots.
-  - Indicator auto-fades.
-
----
-
-## Phase 2 - Enemy coordination AI
-
-### Task F2-1: Tactical role assignment
-- **Files**
-  - `tps/scripts/systems/SYS_SquadDirector.gd`
   - `tps/scripts/ai/AI_EnemyTraitorMarine.gd`
   - `tps/scripts/ai/AI_EnemyCultistRanged.gd`
   - `tps/scripts/ai/AI_EnemyNurgleChampion.gd`
-  - `tps/scripts/mission/MIS_VS01_Controller.gd`
 - **Acceptance**
-  - Enemies receive role updates (suppressor/flanker/rusher/anchor).
-  - Role changes alter movement/engagement behavior in combat.
+  - Each archetype reacts differently to damage windows (stagger timing/threshold behavior).
 
 ---
 
-## Phase 3 - Player ability kit
+## Phase B - Mission variety and replayability
 
-### Task F3-1: Implement three ability actions
+### Task B1: Add second mission profile and scene variant
 - **Files**
-  - `tps/scripts/gameplay/GP_PlayerController.gd`
-  - `tps/scripts/systems/SYS_GameState.gd`
-  - `tps/data/abilities/ability_definitions.json`
+  - `tps/data/missions/mission_profiles.json`
+  - `tps/scenes/levels/SCN_LVL_VerticalSlice_02.tscn` (new)
+  - `tps/scripts/mission/MIS_VS02_Controller.gd` (new)
 - **Acceptance**
-  - Resilience, toxic burst, and rally abilities trigger from input.
-  - Cooldowns gate ability reuse.
+  - A second playable mission with distinct wave and objective composition exists.
 
-### Task F3-2: Ability status in HUD
+### Task B2: Expand optional objectives and reward hooks
 - **Files**
-  - `tps/scripts/ui/UI_HUDController.gd`
+  - `tps/data/missions/mission_profiles.json`
+  - `tps/scripts/mission/MIS_VS01_Controller.gd`
+  - `tps/scripts/systems/SYS_GameState.gd`
+- **Acceptance**
+  - Multiple optional objective conditions can be tracked and rewarded in one run.
+
+---
+
+## Phase C - Progression and profile persistence
+
+### Task C1: Persist progression data to `user://`
+- **Files**
+  - `tps/scripts/systems/SYS_Progression.gd`
+  - `tps/scripts/systems/SYS_GameState.gd`
+- **Acceptance**
+  - Level/xp/requisition and unlocked rewards survive restart.
+
+### Task C2: Surface unlock/perk state in HUD
+- **Files**
   - `tps/scenes/ui/SCN_UI_HUD.tscn`
+  - `tps/scripts/ui/UI_HUDController.gd`
 - **Acceptance**
-  - HUD displays readiness/cooldown status.
+  - HUD exposes at least one unlocked perk/reward state in-mission.
 
 ---
 
-## Phase 4 - Mission variety
+## Phase D - Narrative consequence depth
 
-### Task F4-1: Optional objective + extraction hold
-- **Files**
-  - `tps/scripts/mission/MIS_VS01_Controller.gd`
-  - `tps/data/missions/mission_templates.json`
-- **Acceptance**
-  - Mission includes optional objective tracking.
-  - Extraction requires timed hold before completion.
-
----
-
-## Phase 5 - Progression/meta
-
-### Task F5-1: Persistent profile and reward flow
-- **Files**
-  - `tps/scripts/systems/SYS_ProfileManager.gd`
-  - `tps/scripts/systems/SYS_GameState.gd`
-  - `tps/scripts/mission/MIS_VS01_Controller.gd`
-  - `tps/data/progression/progression_tree.json`
-  - `tps/data/profile/default_profile.json`
-- **Acceptance**
-  - Mission rewards persist to `user://` profile save.
-  - Unlocks become available after threshold progression.
-
----
-
-## Phase 6 - Narrative branching
-
-### Task F6-1: Branch flag integration
+### Task D1: Multi-branch consequence stacking across chapters
 - **Files**
   - `tps/scripts/story/STY_StoryManager.gd`
-  - `tps/scripts/story/STY_StorySystemsRoot.gd`
   - `tps/scripts/mission/MIS_VS01_Controller.gd`
+  - `tps/data/missions/mission_profiles.json`
 - **Acceptance**
-  - Mission outcome can set branch flags.
-  - Narrative system reacts to at least one branch flag.
+  - Mission state can apply compounded consequences from chapter 2 + chapter 3 decisions.
+
+### Task D2: Contact outcome variants
+- **Files**
+  - `tps/data/story/dialogues/contacts_ch2.json`
+  - `tps/data/story/dialogues/contacts_ch3.json`
+  - `tps/scripts/story/STY_DialogueUI.gd`
+- **Acceptance**
+  - At least one contact renders alternate line sets based on prior branch choice.
 
 ---
 
-## Phase 7 - Boss encounters + chapter climax
+## Phase E - UX and settings completeness
 
-### Task F7-1: Add chapter boss archetype
+### Task E1: In-game settings panel scene
 - **Files**
-  - `tps/scripts/ai/AI_BossGraveWarden.gd`
-  - `tps/scenes/enemies/SCN_BossGraveWarden.tscn`
-  - `tps/scripts/mission/MIS_VS01_Controller.gd`
-  - `tps/data/bosses/boss_profiles.json`
+  - `tps/scenes/ui/SCN_UI_Settings.tscn` (new)
+  - `tps/scripts/ui/UI_SettingsMenu.gd` (new)
+  - `tps/scripts/systems/SYS_Settings.gd`
 - **Acceptance**
-  - Boss spawns in late mission phase.
-  - Boss has at least 2 behavior phases.
+  - Players can change audio/sensitivity/subtitle settings at runtime and persist them.
+
+### Task E2: Input mapping discoverability
+- **Files**
+  - `tps/scenes/ui/SCN_UI_HUD.tscn`
+  - `tps/scripts/ui/UI_HUDController.gd`
+- **Acceptance**
+  - Contextual prompts display current action bindings for keyboard/controller.
 
 ---
 
-## Phase 8 - Art/audio identity hooks
+## Phase F - Performance and validation
 
-### Task F8-1: Chapter mood and ambience parameters
+### Task F1: Wave simulation stress profile
 - **Files**
-  - `tps/data/missions/mission_templates.json`
-  - `tps/scripts/mission/MIS_VS01_Controller.gd`
-- **Acceptance**
-  - Chapter transitions alter lighting/encounter tone parameters.
-
----
-
-## Phase 9 - Performance/scalability follow-through
-
-### Task F9-1: AI and projectile scalability controls
-- **Files**
-  - `tps/scripts/ai/AI_EnemyProjectile.gd`
+  - `tps/data/qa/test_matrix.json`
   - `tps/scripts/mission/MIS_VS01_Controller.gd`
   - `tps/scripts/systems/SYS_ProjectilePool.gd`
 - **Acceptance**
-  - Projectile reuse path remains stable under sustained ranged fire.
-  - Enemy updates avoid per-frame expensive scene scans.
+  - High-pressure ranged-wave test case is documented and reproducible from QA data.
 
----
-
-## Phase 10 - UX completeness
-
-### Task F10-1: Runtime settings menu + applied options
+### Task F2: Headless smoke target docs + script
 - **Files**
-  - `tps/scripts/ui/UI_SettingsMenu.gd`
-  - `tps/scenes/ui/SCN_UI_Settings.tscn`
-  - `tps/scenes/levels/SCN_LVL_VerticalSlice_01.tscn`
-  - `tps/scripts/gameplay/GP_CameraAim.gd`
-  - `tps/data/ux/settings_schema.json`
+  - `tps/tests/smoke_scenarios.md` (new)
+  - `scripts/run_tps_smoke.sh` (new)
 - **Acceptance**
-  - Settings menu toggles in runtime.
-  - Changes apply and persist through ProfileManager.
+  - One command path runs editor import pass + headless quit smoke validation.
 
 ---
 
-## Phase 11 - QA/balancing scaffolding
+## Suggested implementation order
 
-### Task F11-1: Add machine-readable validation checklist
-- **Files**
-  - `tps/data/qa/runtime_checklist.json`
-  - `tps/tests/smoke_scenarios.md`
-- **Acceptance**
-  - Checklist includes startup, controls, mission states, and progression validation points.
-
----
-
-## Delivery Cadence (implementation order)
-
-1. Foundation (Phase 0)
-2. Combat + AI + abilities + mission variety (Phases 1-4)
-3. Progression + branching narrative (Phases 5-6)
-4. Boss + environment identity + UX (Phases 7-10)
-5. QA scaffolding and final validation (Phase 11)
+1. Phase C (persistence baseline)
+2. Phase E (runtime usability)
+3. Phase B (content expansion)
+4. Phase D (narrative depth)
+5. Phase A (combat tuning)
+6. Phase F (stress and validation hardening)
