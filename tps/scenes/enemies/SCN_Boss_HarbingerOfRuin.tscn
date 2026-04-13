@@ -1,6 +1,9 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://scripts/ai/AI_BossHarbinger.gd" id="1_boss"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/metalplates_color.res" id="2_tex_body"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/metalplates_normal.res" id="3_tex_normal"]
+[ext_resource type="Texture2D" path="res://assets/textures/environment/metalplates_roughness.res" id="4_tex_rough"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_boss"]
 radius = 0.72
@@ -18,11 +21,19 @@ height = 0.7
 albedo_color = Color(0.26, 0.41, 0.23, 1)
 metallic = 0.35
 roughness = 0.74
+albedo_texture = ExtResource("2_tex_body")
+roughness_texture = ExtResource("4_tex_rough")
+normal_enabled = true
+normal_texture = ExtResource("3_tex_normal")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_trim"]
 albedo_color = Color(0.48, 0.34, 0.18, 1)
 metallic = 0.42
 roughness = 0.66
+albedo_texture = ExtResource("2_tex_body")
+roughness_texture = ExtResource("4_tex_rough")
+normal_enabled = true
+normal_texture = ExtResource("3_tex_normal")
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_awareness"]
 radius = 42.0

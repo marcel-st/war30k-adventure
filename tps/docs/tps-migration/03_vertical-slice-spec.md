@@ -49,6 +49,16 @@ with chapter narrative beats, controller support, and integrated audio identity.
   - combat/intermission music transitions
 - Headless-safe audio behavior for runtime validation environments.
 
+### Visual crisp pass
+
+- Curated CC0 texture + sky assets integrated for cleaner readability:
+  - ambientCG PBR surfaces for environment/armor material detail
+  - Poly Haven sky image for improved scene backdrop
+- VS01 visual updates include:
+  - textured floor/walls and improved extraction pad emphasis
+  - small environment set-dressing to reduce empty graybox feel
+  - updated enemy/player material response for more consistent PBR look
+
 ## Known constraints (still out of scope)
 
 - Final hero/enemy art production assets and full animation graph polish.

@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3 uid="uid://j3o3so2i0w6w"]
+[gd_scene load_steps=35 format=3 uid="uid://j3o3so2i0w6w"]
 
 [ext_resource type="Script" path="res://scripts/mission/MIS_VS01_Controller.gd" id="1_0y8yb"]
 [ext_resource type="PackedScene" path="res://scenes/player/SCN_PlayerMarine.tscn" id="2_hf5yn"]
@@ -9,17 +9,33 @@
 [ext_resource type="PackedScene" path="res://scenes/story/SCN_StorySystems.tscn" id="7_1j2bq"]
 [ext_resource type="PackedScene" path="res://scenes/npc/SCN_NPC_ContactActor.tscn" id="8_6l3za"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/SCN_Boss_HarbingerOfRuin.tscn" id="9_boss"]
+[ext_resource type="ImageTexture" path="res://assets/textures/environment/concrete_color.res" id="10_concrete_color"]
+[ext_resource type="ImageTexture" path="res://assets/textures/environment/concrete_normal.res" id="11_concrete_normal"]
+[ext_resource type="ImageTexture" path="res://assets/textures/environment/concrete_roughness.res" id="12_concrete_roughness"]
+[ext_resource type="ImageTexture" path="res://assets/textures/environment/concrete_ao.res" id="13_concrete_ao"]
+[ext_resource type="ImageTexture" path="res://assets/textures/environment/metalplates_color.res" id="14_metal_color"]
+[ext_resource type="ImageTexture" path="res://assets/textures/environment/metalplates_normal.res" id="15_metal_normal"]
+[ext_resource type="ImageTexture" path="res://assets/textures/environment/metalplates_roughness.res" id="16_metal_roughness"]
+[ext_resource type="ImageTexture" path="res://assets/textures/environment/metalplates_metallic.res" id="17_metal_metallic"]
+[ext_resource type="ImageTexture" path="res://assets/textures/skyboxes/studio_small_09.res" id="18_sky"]
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_vs01"]
+panorama = ExtResource("18_sky")
+
+[sub_resource type="Sky" id="Sky_vs01"]
+sky_material = SubResource("PanoramaSkyMaterial_vs01")
 
 [sub_resource type="Environment" id="Environment_hg35v"]
 background_mode = 2
-background_color = Color(0.0352941, 0.0392157, 0.0431373, 1)
+sky = SubResource("Sky_vs01")
+background_color = Color(0.027451, 0.0313726, 0.0352941, 1)
 ambient_light_source = 2
-ambient_light_color = Color(0.352941, 0.396078, 0.454902, 1)
-ambient_light_energy = 0.6
+ambient_light_color = Color(0.341176, 0.376471, 0.431373, 1)
+ambient_light_energy = 0.72
 fog_enabled = true
-fog_light_color = Color(0.235294, 0.282353, 0.313726, 1)
-fog_light_energy = 0.7
-fog_sun_scatter = 0.1
+fog_light_color = Color(0.235294, 0.270588, 0.298039, 1)
+fog_light_energy = 0.82
+fog_sun_scatter = 0.18
 dof_blur_far_enabled = true
 dof_blur_far_distance = 65.0
 dof_blur_far_transition = 12.0
@@ -35,15 +51,24 @@ size = Vector3(5, 2, 5)
 size = Vector3(64, 1, 64)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
-albedo_color = Color(0.231373, 0.239216, 0.243137, 1)
-metallic = 0.18
-roughness = 0.88
+albedo_color = Color(0.8, 0.8, 0.8, 1)
+metallic = 0.06
+roughness = 0.94
+ao_enabled = true
+ao_texture = ExtResource("13_concrete_ao")
+normal_enabled = true
+normal_texture = ExtResource("11_concrete_normal")
+roughness_texture = ExtResource("12_concrete_roughness")
+albedo_texture = ExtResource("10_concrete_color")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_extract"]
 albedo_color = Color(0.168627, 0.25098, 0.188235, 0.55)
 transparency = 1
 metallic = 0.05
 roughness = 0.4
+emission_enabled = true
+emission = Color(0.227451, 0.482353, 0.286275, 1)
+emission_energy_multiplier = 0.7
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_wall_long"]
 size = Vector3(3, 2.6, 14)
@@ -58,9 +83,22 @@ size = Vector3(6, 2.8, 2)
 size = Vector3(6, 2.8, 2)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
-albedo_color = Color(0.188235, 0.2, 0.211765, 1)
-metallic = 0.24
+albedo_color = Color(0.74, 0.78, 0.82, 1)
+metallic = 0.5
 roughness = 0.86
+metallic_texture = ExtResource("17_metal_metallic")
+normal_enabled = true
+normal_texture = ExtResource("15_metal_normal")
+roughness_texture = ExtResource("16_metal_roughness")
+albedo_texture = ExtResource("14_metal_color")
+
+[sub_resource type="BoxMesh" id="BoxMesh_crate"]
+size = Vector3(1.4, 1.1, 1.4)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_pipe"]
+top_radius = 0.2
+bottom_radius = 0.2
+height = 5.5
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_contact_trigger"]
 size = Vector3(3.2, 2.0, 3.2)
@@ -123,6 +161,28 @@ shape = SubResource("BoxShape3D_wall_short")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="CoverWallC"]
 mesh = SubResource("BoxMesh_wall_short")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="SetDressing" type="Node3D" parent="."]
+
+[node name="CrateA" type="MeshInstance3D" parent="SetDressing"]
+transform = Transform3D(0.981627, 0, -0.190809, 0, 1, 0, 0.190809, 0, 0.981627, -5.5, 0.55, -7.5)
+mesh = SubResource("BoxMesh_crate")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="CrateB" type="MeshInstance3D" parent="SetDressing"]
+transform = Transform3D(0.92388, 0, 0.382683, 0, 1, 0, -0.382683, 0, 0.92388, 6.7, 0.55, -10.4)
+mesh = SubResource("BoxMesh_crate")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="CrateC" type="MeshInstance3D" parent="SetDressing"]
+transform = Transform3D(0.829038, 0, -0.559193, 0, 1, 0, 0.559193, 0, 0.829038, 0.2, 0.55, -13.2)
+mesh = SubResource("BoxMesh_crate")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="PipeA" type="MeshInstance3D" parent="SetDressing"]
+transform = Transform3D(0.737277, 0.67559, 0, -0.67559, 0.737277, 0, 0, 0, 1, -10.8, 2.25, -3.6)
+mesh = SubResource("CylinderMesh_pipe")
 surface_material_override/0 = SubResource("StandardMaterial3D_wall")
 
 [node name="PlayerSpawn" type="Marker3D" parent="."]

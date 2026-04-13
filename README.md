@@ -31,6 +31,9 @@ WAR30K Adventure currently contains two playable development tracks in one repos
   - combat SFX, UI SFX, footsteps, boss cues
   - layered ambience
   - hard-rock combat tracks and intermission rock ballad transitions
+- Graphics crispness pass:
+  - CC0 PBR texture integration for environment/character readability
+  - sky panorama + lighting/post-process tuning for cleaner contrast
 
 ## Repository Layout
 
@@ -108,6 +111,13 @@ Integrated TPS audio assets were sourced from open-license packs.
 
 - Manifest: `tps/audio/ASSET_MANIFEST.json`
 - License notes: `tps/audio/THIRD_PARTY_AUDIO_LICENSES.md`
+
+## Graphics Attribution
+
+Recent visual upgrades in the TPS scene use open-license graphics assets.
+
+- Manifest: `tps/art/GRAPHICS_ASSET_MANIFEST.json`
+- License notes: `tps/art/THIRD_PARTY_GRAPHICS_LICENSES.md`
 
 ## Additional Documentation
 

@@ -1,7 +1,10 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scripts/ai/AI_EnemyCultistRanged.gd" id="1_ai"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/SCN_EnemyProjectile.tscn" id="2_proj"]
+[ext_resource type="Resource" path="res://assets/textures/environment/concrete_color.res" id="3_concrete_color"]
+[ext_resource type="Resource" path="res://assets/textures/environment/concrete_normal.res" id="4_concrete_normal"]
+[ext_resource type="Resource" path="res://assets/textures/environment/concrete_roughness.res" id="5_concrete_rough"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_enemy"]
 radius = 0.36
@@ -15,6 +18,10 @@ height = 0.95
 albedo_color = Color(0.33, 0.35, 0.29, 1)
 metallic = 0.08
 roughness = 0.86
+albedo_texture = ExtResource("3_concrete_color")
+normal_enabled = true
+normal_texture = ExtResource("4_concrete_normal")
+roughness_texture = ExtResource("5_concrete_rough")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_enemy_helm"]
 albedo_color = Color(0.5, 0.36, 0.2, 1)
@@ -35,6 +42,10 @@ size = Vector3(0.12, 0.12, 0.58)
 albedo_color = Color(0.26, 0.27, 0.28, 1)
 metallic = 0.36
 roughness = 0.62
+albedo_texture = ExtResource("3_concrete_color")
+normal_enabled = true
+normal_texture = ExtResource("4_concrete_normal")
+roughness_texture = ExtResource("5_concrete_rough")
 
 [node name="EnemyCultistRanged" type="CharacterBody3D"]
 script = ExtResource("1_ai")
