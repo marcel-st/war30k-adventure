@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://boltgunscene"]
+
+[ext_resource type="Script" path="res://scripts/weapons/WPN_Boltgun.gd" id="1_3yb2q"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_boltgun"]
+size = Vector3(0.2, 0.15, 0.8)
+
+[node name="Boltgun" type="Node3D"]
+script = ExtResource("1_3yb2q")
+
+[node name="GunBody" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_boltgun")
+
+[node name="Muzzle" type="Marker3D" parent="."]
+position = Vector3(0, 0, -0.55)

@@ -1,0 +1,29 @@
+config_version=5
+
+[application]
+
+config/name="WAR30K Adventure TPS"
+run/main_scene="res://scenes/levels/SCN_LVL_VerticalSlice_01.tscn"
+config/features=PackedStringArray("4.2")
+config/icon="res://icon.svg"
+
+[autoload]
+
+GameState="*res://scenes/systems/SCN_SYS_GameState.tscn"
+
+[display]
+
+window/size/viewport_width=1600
+window/size/viewport_height=900
+window/stretch/mode="viewport"
+window/stretch/aspect="keep"
+
+[physics]
+
+3d/default_gravity=24.0
+
+[rendering]
+
+renderer/rendering_method="forward_plus"
+anti_aliasing/quality/msaa_3d=2
+environment/defaults/default_clear_color=Color(0.04, 0.05, 0.06, 1)

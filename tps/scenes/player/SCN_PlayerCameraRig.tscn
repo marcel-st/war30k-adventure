@@ -1,0 +1,15 @@
+[gd_scene load_steps=2 format=3 uid="uid://camera_rig_tps"]
+
+[ext_resource type="Script" path="res://scripts/gameplay/GP_CameraAim.gd" id="1"]
+
+[node name="SCN_PlayerCameraRig" type="Node3D"]
+script = ExtResource("1")
+
+[node name="Pivot" type="Node3D" parent="."]
+
+[node name="SpringArm3D" type="SpringArm3D" parent="Pivot"]
+spring_length = 4.2
+
+[node name="Camera3D" type="Camera3D" parent="Pivot/SpringArm3D"]
+current = true
+fov = 76.0

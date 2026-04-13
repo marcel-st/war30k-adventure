@@ -1,0 +1,57 @@
+[gd_scene load_steps=10 format=3 uid="uid://scnplayermarine"]
+
+[ext_resource type="Script" path="res://scripts/gameplay/GP_PlayerController.gd" id="1_2f7cb"]
+[ext_resource type="PackedScene" path="res://scenes/player/SCN_PlayerCameraRig.tscn" id="2_3cxwn"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/SCN_WPN_Boltgun.tscn" id="3_54ynh"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_marine"]
+radius = 0.45
+height = 1.15
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_armor"]
+albedo_color = Color(0.82, 0.81, 0.73, 1)
+roughness = 0.78
+metallic = 0.22
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_trim"]
+albedo_color = Color(0.36, 0.45, 0.32, 1)
+roughness = 0.64
+metallic = 0.28
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_body"]
+material = SubResource("StandardMaterial3D_armor")
+radius = 0.45
+height = 1.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_pauldron"]
+material = SubResource("StandardMaterial3D_trim")
+size = Vector3(0.85, 0.24, 0.7)
+
+[node name="PlayerMarine" type="CharacterBody3D"]
+script = ExtResource("1_2f7cb")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CapsuleShape3D_marine")
+position = Vector3(0, 1.0, 0)
+
+[node name="VisualRoot" type="Node3D" parent="."]
+
+[node name="BodyMesh" type="MeshInstance3D" parent="VisualRoot"]
+mesh = SubResource("CapsuleMesh_body")
+position = Vector3(0, 1.0, 0)
+
+[node name="PauldronLeft" type="MeshInstance3D" parent="VisualRoot"]
+mesh = SubResource("BoxMesh_pauldron")
+position = Vector3(-0.5, 1.55, 0)
+
+[node name="PauldronRight" type="MeshInstance3D" parent="VisualRoot"]
+mesh = SubResource("BoxMesh_pauldron")
+position = Vector3(0.5, 1.55, 0)
+
+[node name="CameraRig" parent="." instance=ExtResource("2_3cxwn")]
+position = Vector3(0, 1.6, 0)
+
+[node name="WeaponSocket" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.996195, -0.0871558, 0, 0.0871558, 0.996195, 0.45, 1.45, -0.25)
+
+[node name="Boltgun" parent="WeaponSocket" instance=ExtResource("3_54ynh")]

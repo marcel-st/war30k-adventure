@@ -24,6 +24,18 @@ You play as Nathaniel Garro during the Horus Heresy, surviving Isstvan V, crossi
 - Visual FX: daemon sine-wave hover/floating and marine torso bob while walking
 - Mission flow: briefing auto-starts gameplay on movement input + safe mission spawn fallback
 
+## TPS Migration Track (Godot 4)
+
+The repository now also includes an in-progress 3D third-person shooter foundation in `tps/`.
+
+- Engine: Godot 4.x (Forward+ renderer)
+- Perspective: third-person shoulder camera with aim zoom
+- Player fantasy: Death Guard loyalist-style space marine (30K palette/material direction)
+- Combat loop (prototype): movement, aiming, hitscan boltgun fire, reload, extraction objective trigger
+- HUD: health, armor, ammo, and objective state
+
+Current status: this is a **vertical-slice scaffold**, not a full content-complete game yet.
+
 ## Story Campaign
 
 1. **Isstvan V – Broken Loyalty**
@@ -124,6 +136,7 @@ scripts/
 - `g++` or `clang++` with C++17 support
 - `cmake` (3.16+)
 - SDL2 development package
+- Godot 4.x editor/runtime (for TPS track)
 
 Debian/Ubuntu example:
 
@@ -138,6 +151,21 @@ sudo apt-get install -y build-essential cmake libsdl2-dev
 cmake -S . -B build
 cmake --build build -j
 ```
+
+### Run SDL2 Prototype
+
+```bash
+./build/war30k_adventure
+```
+
+### Run TPS Scaffold (Godot 4)
+
+```bash
+cd tps
+godot4 --editor
+```
+
+If your binary is named differently on your machine, use `godot` instead of `godot4`.
 
 ## Regenerate Spritesheets (Optional)
 
@@ -179,6 +207,18 @@ Animation behavior:
 ```bash
 ./build/war30k_adventure
 ```
+
+For the TPS project, open `tps/project.godot` in Godot 4 and run the main scene.
+
+## TPS Prototype Controls
+
+- Move: `W A S D` or left stick
+- Look: mouse or right stick
+- Aim: right mouse button or gamepad LT
+- Fire: left mouse button or gamepad RT
+- Reload: `R` or gamepad Y
+- Sprint: `Shift` or left stick press
+- Pause/mouse capture toggle: `Esc`
 
 ## Changelog
 
